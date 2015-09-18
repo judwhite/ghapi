@@ -28,7 +28,7 @@ type UserPayload struct {
 }
 
 func (api *UserApi) GetUser(userName string) (*UserPayload, error) {
-	url := "/users/" + userName
+	url := api.addBaseUrl("/users/" + userName)
 	return api.GetUserByUrl(url)
 }
 
@@ -37,6 +37,7 @@ func (api *UserApi) GetUserByUrl(url string) (*UserPayload, error) {
 	if err != nil {
 		return nil, err
 	}
+	defer resp.Body.Close()
 
 	user := &UserPayload{}
 
@@ -58,6 +59,7 @@ func (api *UserApi) GetOrganizationsByUrl(url string) ([]OrganizationPayload, er
 	if err != nil {
 		return nil, err
 	}
+	defer resp.Body.Close()
 
 	orgs := []OrganizationPayload{}
 

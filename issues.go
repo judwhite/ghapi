@@ -40,10 +40,18 @@ type IssueCommentPayload struct {
 }
 
 func (api *IssueApi) DeleteIssueComment(commentId int) error {
-	// TODO
 	url := api.getUrl("/repos/:owner/:repo/issues/comments/" + strconv.Itoa(commentId))
-	_, err := api.httpDelete(url)
-	return err
+	return api.DeleteIssueCommentByUrl(url)
+}
+
+func (api *IssueApi) DeleteIssueCommentByUrl(url string) error {
+	resp, err := api.httpDelete(url)
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+
+	return nil
 }
 
 func (api *IssueApi) GetIssueComment(commentId int) (*IssueCommentPayload, error) {
@@ -53,6 +61,7 @@ func (api *IssueApi) GetIssueComment(commentId int) (*IssueCommentPayload, error
 	if err != nil {
 		return nil, err
 	}
+	defer resp.Body.Close()
 
 	issueComment := &IssueCommentPayload{}
 
@@ -74,6 +83,7 @@ func (api *IssueApi) GetIssueByUrl(url string) (*IssuePayload, error) {
 	if err != nil {
 		return nil, err
 	}
+	defer resp.Body.Close()
 
 	issue := &IssuePayload{}
 
@@ -83,4 +93,30 @@ func (api *IssueApi) GetIssueByUrl(url string) (*IssuePayload, error) {
 	}
 
 	return issue, nil
+}
+
+func (api *IssueApi) UpdateIssueAssignee(issueNumber int, assignee string) error {
+	url := api.getUrl("/repos/:owner/:repo/issues/" + strconv.Itoa(issueNumber))
+	return api.UpdateIssueAssigneeByUrl(url, assignee)
+}
+
+func (api *IssueApi) UpdateIssueAssigneeByUrl(url, assignee string) error {
+	data := struct {
+		Assignee string `json:"assignee"`
+	}{
+		assignee,
+	}
+
+	b, err := json.Marshal(data)
+	if err != nil {
+		return err
+	}
+
+	resp, err := api.httpPatch(url, string(b))
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+
+	return nil
 }
