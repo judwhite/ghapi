@@ -88,6 +88,65 @@ func TestApiInfo_addBaseUrl(t *testing.T) {
 	expect(t, expected, actual, "addBaseUrl")
 }
 
+func TestApiInfo_doHttpRequest_ReturnsErrOnParseError(t *testing.T) {
+	api := makeGitHubApi()
+	req, err := api.doHttpRequest("GET", ":/noscheme", nil)
+	expectNil(t, req, "req")
+	expectNotNil(t, err, "err")
+	expect(t, "parse :/noscheme: missing protocol scheme", err.Error(), "err.Error()")
+}
+
+func TestApiInfo_doHttpRequest_ReturnsErrOnDoError(t *testing.T) {
+	api := makeGitHubApi()
+	req, err := api.doHttpRequest("GET", "http://0.0.0.0:0/wat", nil)
+	expectNil(t, req, "req")
+	expectNotNil(t, err, "err")
+	expect(t, "Get http://0.0.0.0:0/wat: dial tcp 0.0.0.0:0: connectex: The requested address is not valid in its context.", err.Error(), "err.Error()")
+}
+
+func TestApiInfo_doHttpRequest_HasHeadersSet(t *testing.T) {
+	signal := make(chan struct{}, 1)
+	ts, api := makeGitHubApiTestServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		signal <- struct{}{}
+		if r.URL != nil && r.URL.Path == "/test_headers" {
+			expect(t, "application/vnd.github.v3+json", r.Header.Get("Accept"), "r.Header[\"Accept\"]")
+			expect(t, "application/json", r.Header.Get("Content-Type"), "r.Header[\"Content-Type\"]")
+			expect(t, "token "+expectedAuthToken, r.Header.Get("Authorization"), "r.Header[\"Authorization\"]")
+		} else {
+			t.Fatalf("unexpected URL %v", r.URL)
+		}
+	}))
+	defer ts.Close()
+
+	resp, err := api.doHttpRequest("GET", ts.URL+"/test_headers", nil)
+	<-signal
+
+	expectNotNil(t, resp, "resp")
+	expectNil(t, err, "err")
+}
+
+func TestApiInfo_doHttpRequest_AuthorizationHeadersNotSetWhenAuthTokenIsEmpty(t *testing.T) {
+	signal := make(chan struct{}, 1)
+	ts, api := makeGitHubApiTestServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		signal <- struct{}{}
+		if r.URL != nil && r.URL.Path == "/test_headers" {
+			expect(t, "application/vnd.github.v3+json", r.Header.Get("Accept"), "r.Header[\"Accept\"]")
+			expect(t, "application/json", r.Header.Get("Content-Type"), "r.Header[\"Content-Type\"]")
+			expect(t, "", r.Header.Get("Authorization"), "r.Header[\"Authorization\"]")
+		} else {
+			t.Fatalf("unexpected URL %v", r.URL)
+		}
+	}))
+	defer ts.Close()
+
+	api.OAuth2Token = ""
+	resp, err := api.doHttpRequest("GET", ts.URL+"/test_headers", nil)
+	<-signal
+
+	expectNotNil(t, resp, "resp")
+	expectNil(t, err, "err")
+}
+
 func TestRepositoryInfo_getUrl(t *testing.T) {
 	issueApi := makeGitHubApi().Issue
 
