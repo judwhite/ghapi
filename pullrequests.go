@@ -16,8 +16,8 @@ const (
 type PullRequestPayload struct {
 }
 
-func (p *PullRequestsApi) ListPullRequests(owner, repo string) ([]PullRequestPayload, error) {
+/*func (p *PullRequestsApi) ListPullRequests(owner, repo string) ([]PullRequestPayload, error) {
 	// TODO
 	_ = p.getUrl("/repos/:owner/:repo/pulls")
 	return nil, nil
-}
+}*/

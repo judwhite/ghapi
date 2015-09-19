@@ -14,5 +14,5 @@ func TestErrHttpError_Error(t *testing.T) {
 
 	const expected string = "404 Not Found\nPOST http://example.org\nRequest Body:\n{ id: \"1\" }\nResponse Body:\n{ message: \"not found\" }"
 
-	assert_string(t, expected, e.Error(), "e.Error()")
+	expect(t, expected, e.Error(), "e.Error()")
 }

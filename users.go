@@ -50,7 +50,7 @@ func (api *UserApi) GetUserByUrl(url string) (*UserPayload, error) {
 }
 
 func (api *UserApi) GetOrganizations(userName string) ([]OrganizationPayload, error) {
-	url := fmt.Sprintf("/users/%s/orgs", userName)
+	url := api.addBaseUrl(fmt.Sprintf("/users/%s/orgs", userName))
 	return api.GetOrganizationsByUrl(url)
 }
 
