@@ -215,7 +215,6 @@ func TestIssueApi_GetIssue(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	//expect(t, "", issue, "")
 
 	expect(t, 1, issue.Id, "issue.Id")
 	expect(t, "https://api.github.com/repos/octocat/Hello-World/issues/1347", issue.Url, "issue.Url")
@@ -258,7 +257,11 @@ func TestIssueApi_GetIssue(t *testing.T) {
 	expect(t, false, issue.Locked, "issue.Locked")
 	expect(t, 0, issue.Comments, "issue.Comments")
 
-	// TODO: PullRequest
+	expectNotNil(t, issue.PullRequest, "issue.PullRequest")
+	expect(t, "https://api.github.com/repos/octocat/Hello-World/pulls/1347", issue.PullRequest.Url, "issue.PullRequest.Url")
+	expect(t, "https://github.com/octocat/Hello-World/pull/1347", issue.PullRequest.HtmlUrl, "issue.PullRequest.HtmlUrl")
+	expect(t, "https://github.com/octocat/Hello-World/pull/1347.diff", issue.PullRequest.DiffUrl, "issue.PullRequest.DiffUrl")
+	expect(t, "https://github.com/octocat/Hello-World/pull/1347.patch", issue.PullRequest.PatchUrl, "issue.PullRequest.PatchUrl")
 
 	expectNil(t, issue.ClosedAt, "issue.ClosedAt")
 	expect(t, date("2011-04-22T13:33:48Z"), issue.CreatedAt, "issue.CreatedAt")

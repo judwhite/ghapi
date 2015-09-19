@@ -7,26 +7,34 @@ import (
 )
 
 type IssuePayload struct {
-	Url         string            `json:"url"`
-	LabelsUrl   string            `json:"labels_url"`
-	CommentsUrl string            `json:"comments_url"`
-	EventsUrl   string            `json:"events_url"`
-	HtmlUrl     string            `json:"html_url"`
-	Id          int               `json:"id"`
-	Number      int               `json:"number"`
-	Title       string            `json:"title"`
-	User        UserPayload       `json:"user"`
-	Labels      []LabelPayload    `json:"labels"`
-	State       string            `json:"state"`
-	Locked      bool              `json:"locked"`
-	Assignee    *UserPayload      `json:"assignee"`
-	Milestone   *MilestonePayload `json:"milestone"`
-	Comments    int               `json:"comments"`
-	CreatedAt   time.Time         `json:"created_at"`
-	UpdatedAt   time.Time         `json:"updated_at"`
-	ClosedAt    *time.Time        `json:"closed_at"`
-	Body        string            `json:"body"`
-	ClosedBy    *UserPayload      `json:"closed_by"`
+	Url         string                   `json:"url"`
+	LabelsUrl   string                   `json:"labels_url"`
+	CommentsUrl string                   `json:"comments_url"`
+	EventsUrl   string                   `json:"events_url"`
+	HtmlUrl     string                   `json:"html_url"`
+	Id          int                      `json:"id"`
+	Number      int                      `json:"number"`
+	Title       string                   `json:"title"`
+	User        UserPayload              `json:"user"`
+	Labels      []LabelPayload           `json:"labels"`
+	State       string                   `json:"state"`
+	Locked      bool                     `json:"locked"`
+	Assignee    *UserPayload             `json:"assignee"`
+	Milestone   *MilestonePayload        `json:"milestone"`
+	Comments    int                      `json:"comments"`
+	PullRequest *IssuePullRequestPayload `json:"pull_request"`
+	CreatedAt   time.Time                `json:"created_at"`
+	UpdatedAt   time.Time                `json:"updated_at"`
+	ClosedAt    *time.Time               `json:"closed_at"`
+	Body        string                   `json:"body"`
+	ClosedBy    *UserPayload             `json:"closed_by"`
+}
+
+type IssuePullRequestPayload struct {
+	Url      string `json:"url"`
+	HtmlUrl  string `json:"html_url"`
+	DiffUrl  string `json:"diff_url"`
+	PatchUrl string `json:"patch_url"`
 }
 
 type IssueCommentPayload struct {
