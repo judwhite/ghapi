@@ -4,7 +4,6 @@ import (
 	"io/ioutil"
 	"net/http"
 	"testing"
-	"time"
 )
 
 const get_issue_1_response string = `{
@@ -130,6 +129,28 @@ const get_issue_1_response string = `{
   }
 }`
 
+func expect_octocat_user(t *testing.T, u *UserPayload, prefix string) {
+	expectNotNil(t, u, prefix)
+
+	expect(t, "octocat", u.Login, prefix+".Login")
+	expect(t, 1, u.Id, prefix+".Id")
+	expect(t, "https://github.com/images/error/octocat_happy.gif", u.AvatarUrl, prefix+".AvatarUrl")
+	expect(t, "", u.GravatarId, prefix+".GravatarId")
+	expect(t, "https://api.github.com/users/octocat", u.Url, prefix+".Url")
+	expect(t, "https://github.com/octocat", u.HtmlUrl, prefix+".HtmlUrl")
+	expect(t, "https://api.github.com/users/octocat/followers", u.FollowersUrl, prefix+".FollowersUrl")
+	expect(t, "https://api.github.com/users/octocat/following{/other_user}", u.FollowingUrl, prefix+".FollowingUrl")
+	expect(t, "https://api.github.com/users/octocat/gists{/gist_id}", u.GistsUrl, prefix+".GistsUrl")
+	expect(t, "https://api.github.com/users/octocat/starred{/owner}{/repo}", u.StarredUrl, prefix+".StarredUrl")
+	expect(t, "https://api.github.com/users/octocat/subscriptions", u.SubscriptionsUrl, prefix+".SubscriptionsUrl")
+	expect(t, "https://api.github.com/users/octocat/orgs", u.OrganizationsUrl, prefix+".OrganizationsUrl")
+	expect(t, "https://api.github.com/users/octocat/repos", u.ReposUrl, prefix+".ReposUrl")
+	expect(t, "https://api.github.com/users/octocat/events{/privacy}", u.EventsUrl, prefix+".EventsUrl")
+	expect(t, "https://api.github.com/users/octocat/received_events", u.ReceivedEventsUrl, prefix+".ReceivedEventsUrl")
+	expect(t, "User", u.Type, prefix+".Type")
+	expect(t, false, u.SiteAdmin, prefix+".SiteAdmin")
+}
+
 func TestIssueApi_DeleteIssueComment(t *testing.T) {
 	ts, api := makeGitHubApiTestServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if r.URL != nil && r.URL.Path == "/repos/test_owner/test_repository/issues/comments/1" {
@@ -207,70 +228,41 @@ func TestIssueApi_GetIssue(t *testing.T) {
 	expect(t, "Found a bug", issue.Title, "issue.Title")
 	expect(t, "I'm having a problem with this.", issue.Body, "issue.Body")
 
-	expect(t, "octocat", issue.User.Login, "issue.User.Login")
-	expect(t, 1, issue.User.Id, "issue.User.Id")
-	expect(t, "https://github.com/images/error/octocat_happy.gif", issue.User.AvatarUrl, "issue.User.AvatarUrl")
-	expect(t, "", issue.User.GravatarId, "issue.User.GravatarId")
-	expect(t, "https://api.github.com/users/octocat", issue.User.Url, "issue.User.Url")
-	expect(t, "https://github.com/octocat", issue.User.HtmlUrl, "issue.User.HtmlUrl")
-	expect(t, "https://api.github.com/users/octocat/followers", issue.User.FollowersUrl, "issue.User.FollowersUrl")
-	expect(t, "https://api.github.com/users/octocat/following{/other_user}", issue.User.FollowingUrl, "issue.User.FollowingUrl")
-	expect(t, "https://api.github.com/users/octocat/gists{/gist_id}", issue.User.GistsUrl, "issue.User.GistsUrl")
-	expect(t, "https://api.github.com/users/octocat/starred{/owner}{/repo}", issue.User.StarredUrl, "issue.User.StarredUrl")
-	expect(t, "https://api.github.com/users/octocat/subscriptions", issue.User.SubscriptionsUrl, "issue.User.SubscriptionsUrl")
-	expect(t, "https://api.github.com/users/octocat/orgs", issue.User.OrganizationsUrl, "issue.User.OrganizationsUrl")
-	expect(t, "https://api.github.com/users/octocat/repos", issue.User.ReposUrl, "issue.User.ReposUrl")
-	expect(t, "https://api.github.com/users/octocat/events{/privacy}", issue.User.EventsUrl, "issue.User.EventsUrl")
-	expect(t, "https://api.github.com/users/octocat/received_events", issue.User.ReceivedEventsUrl, "issue.User.ReceivedEventsUrl")
-	expect(t, "User", issue.User.Type, "issue.User.Type")
-	expect(t, false, issue.User.SiteAdmin, "issue.User.SiteAdmin")
+	expect_octocat_user(t, &issue.User, "issue.User")
 
 	expect(t, 1, len(issue.Labels), "len(issue.Labels)")
 	expect(t, "https://api.github.com/repos/octocat/Hello-World/labels/bug", issue.Labels[0].Url, "issue.Labels[0].Url")
 	expect(t, "bug", issue.Labels[0].Name, "issue.Labels[0].Name")
 	expect(t, "f29513", issue.Labels[0].Color, "issue.Labels[0].Color")
 
-	expectNotNil(t, issue.Assignee, "issue.Assignee")
-
-	expect(t, "octocat", issue.Assignee.Login, "issue.Assignee.Login")
-	expect(t, 1, issue.Assignee.Id, "issue.Assignee.Id")
-	expect(t, "https://github.com/images/error/octocat_happy.gif", issue.Assignee.AvatarUrl, "issue.Assignee.AvatarUrl")
-	expect(t, "", issue.Assignee.GravatarId, "issue.Assignee.GravatarId")
-	expect(t, "https://api.github.com/users/octocat", issue.Assignee.Url, "issue.Assignee.Url")
-	expect(t, "https://github.com/octocat", issue.Assignee.HtmlUrl, "issue.Assignee.HtmlUrl")
-	expect(t, "https://api.github.com/users/octocat/followers", issue.Assignee.FollowersUrl, "issue.Assignee.FollowersUrl")
-	expect(t, "https://api.github.com/users/octocat/following{/other_user}", issue.Assignee.FollowingUrl, "issue.Assignee.FollowingUrl")
-	expect(t, "https://api.github.com/users/octocat/gists{/gist_id}", issue.Assignee.GistsUrl, "issue.Assignee.GistsUrl")
-	expect(t, "https://api.github.com/users/octocat/starred{/owner}{/repo}", issue.Assignee.StarredUrl, "issue.Assignee.StarredUrl")
-	expect(t, "https://api.github.com/users/octocat/subscriptions", issue.Assignee.SubscriptionsUrl, "issue.Assignee.SubscriptionsUrl")
-	expect(t, "https://api.github.com/users/octocat/orgs", issue.Assignee.OrganizationsUrl, "issue.Assignee.OrganizationsUrl")
-	expect(t, "https://api.github.com/users/octocat/repos", issue.Assignee.ReposUrl, "issue.Assignee.ReposUrl")
-	expect(t, "https://api.github.com/users/octocat/events{/privacy}", issue.Assignee.EventsUrl, "issue.Assignee.EventsUrl")
-	expect(t, "https://api.github.com/users/octocat/received_events", issue.Assignee.ReceivedEventsUrl, "issue.Assignee.ReceivedEventsUrl")
-	expect(t, "User", issue.Assignee.Type, "issue.Assignee.Type")
-	expect(t, false, issue.Assignee.SiteAdmin, "issue.Assignee.SiteAdmin")
+	expect_octocat_user(t, issue.Assignee, "issue.Assignee")
 
 	// https://developer.github.com/v3/issues/#get-a-single-issue
-	// TODO: milestone
+	expectNotNil(t, issue.Milestone, "issue.Milestone")
+	expect(t, "https://api.github.com/repos/octocat/Hello-World/milestones/1", issue.Milestone.Url, "issue.Milestone.Url")
+	expect(t, "https://github.com/octocat/Hello-World/milestones/v1.0", issue.Milestone.HtmlUrl, "issue.Milestone.HtmlUrl")
+	expect(t, "https://api.github.com/repos/octocat/Hello-World/milestones/1/labels", issue.Milestone.LabelsUrl, "issue.Milestone.LabelsUrl")
+	expect(t, 1002604, issue.Milestone.Id, "issue.Milestone.Id")
+	expect(t, 1, issue.Milestone.Number, "issue.Milestone.Number")
+	expect(t, "open", issue.Milestone.State, "issue.Milestone.State")
+	expect(t, "v1.0", issue.Milestone.Title, "issue.Milestone.Title")
+	expect(t, "Tracking milestone for version 1.0", issue.Milestone.Description, "issue.Milestone.Description")
+	expect_octocat_user(t, &issue.Milestone.Creator, "issue.Milestone.Creator")
+	expect(t, 4, issue.Milestone.OpenIssues, "issue.Milestone.OpenIssues")
+	expect(t, 8, issue.Milestone.ClosedIssues, "issue.Milestone.ClosedIssues")
+	expect(t, date("2011-04-10T20:09:31Z"), issue.Milestone.CreatedAt, "issue.Milestone.CreatedAt")
+	expect(t, date("2014-03-03T18:58:10Z"), issue.Milestone.UpdatedAt, "issue.Milestone.UpdatedAt")
+	expect(t, date("2013-02-12T13:22:01Z"), issue.Milestone.ClosedAt, "issue.Milestone.ClosedAt")
+	expect(t, date("2012-10-09T23:39:01Z"), issue.Milestone.DueOn, "issue.Milestone.DueOn")
 
 	expect(t, false, issue.Locked, "issue.Locked")
 	expect(t, 0, issue.Comments, "issue.Comments")
 
 	// TODO: PullRequest
 
-	expectedCreatedAt, err := time.Parse(time.RFC3339, "2011-04-22T13:33:48Z")
-	if err != nil {
-		t.Fatal(err)
-	}
-	expectedUpdatedAt, err := time.Parse(time.RFC3339, "2011-04-22T13:33:48Z")
-	if err != nil {
-		t.Fatal(err)
-	}
-
 	expectNil(t, issue.ClosedAt, "issue.ClosedAt")
-	expect(t, expectedCreatedAt, issue.CreatedAt, "issue.CreatedAt")
-	expect(t, expectedUpdatedAt, issue.UpdatedAt, "issue.UpdatedAt")
+	expect(t, date("2011-04-22T13:33:48Z"), issue.CreatedAt, "issue.CreatedAt")
+	expect(t, date("2011-04-22T13:33:48Z"), issue.UpdatedAt, "issue.UpdatedAt")
 
-	// TODO Closed By
-	//issue.ClosedBy
+	expect_octocat_user(t, issue.ClosedBy, "issue.ClosedBy")
 }

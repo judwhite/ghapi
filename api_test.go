@@ -5,10 +5,20 @@ import (
 	"net/http/httptest"
 	"reflect"
 	"testing"
+	"time"
 )
 
 func expect(t *testing.T, expected, actual interface{}, msg string) {
 	if expected != actual {
+		// handle comparing time.Time to *time.Time
+		if expectedDate, ok := expected.(time.Time); ok {
+			if actualDate, ok := actual.(*time.Time); ok {
+				if actualDate != nil && expectedDate == *actualDate {
+					return
+				}
+			}
+		}
+
 		t.Fatalf("%s '%v' != '%v'", msg, expected, actual)
 	}
 }
@@ -23,6 +33,14 @@ func expectNil(t *testing.T, actual interface{}, msg string) {
 	if actual != nil && !reflect.ValueOf(actual).IsNil() {
 		t.Fatalf("%s - '%v' expected to not be <nil>", msg, actual)
 	}
+}
+
+func date(value string) time.Time {
+	date, err := time.Parse(time.RFC3339, value)
+	if err != nil {
+		panic(err)
+	}
+	return date
 }
 
 const (
