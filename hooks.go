@@ -4,7 +4,6 @@ import (
 	"crypto/hmac"
 	"crypto/sha1"
 	"encoding/hex"
-	"errors"
 	"io/ioutil"
 	"net/http"
 )
@@ -19,12 +18,16 @@ func ReadRequest(secret []byte, r *http.Request) (GitHubEventType, []byte, error
 		return "", nil, err
 	}
 
+	if r.Body == nil {
+		return "", nil, ErrHttpRequestBodyNil
+	}
+
 	if body, err = ioutil.ReadAll(r.Body); err != nil {
 		return "", nil, err
 	}
 
 	if ok := checkMAC(body, messageMAC, secret); !ok {
-		return "", nil, errors.New("signature mismatch")
+		return "", nil, ErrSignatureMismatch
 	}
 
 	if eventType, err = getEventType(r); err != nil {
@@ -37,7 +40,7 @@ func ReadRequest(secret []byte, r *http.Request) (GitHubEventType, []byte, error
 func getEventType(r *http.Request) (GitHubEventType, error) {
 	events := r.Header["X-Github-Event"]
 	if events == nil || len(events) != 1 {
-		return "", errors.New("\"X-Github-Event\" header not found")
+		return "", ErrGitHubEventNotFound
 	}
 	return GitHubEventType(events[0]), nil
 }
@@ -45,11 +48,11 @@ func getEventType(r *http.Request) (GitHubEventType, error) {
 func getSignature(r *http.Request) (string, error) {
 	sigs := r.Header["X-Hub-Signature"]
 	if sigs == nil || len(sigs) != 1 {
-		return "", errors.New("\"X-Hub-Signature\" header not found")
+		return "", ErrSignatureNotFound
 	}
 	sig := sigs[0]
 	if sig[:5] != "sha1=" {
-		return "", errors.New("\"sha1=\" marker not found")
+		return "", ErrSignatureMarkerNotFound
 	}
 	return sig[5:], nil
 }
