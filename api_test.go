@@ -20,7 +20,7 @@ func expect(t *testing.T, expected, actual interface{}, msg string) {
 			}
 		}
 
-		t.Fatalf("%s '%v' != '%v'", msg, expected, actual)
+		t.Fatalf("%s '%v' (%T) != '%v' (%T)", msg, expected, expected, actual, actual)
 	}
 }
 
@@ -37,7 +37,11 @@ func expectNotNil(t *testing.T, actual interface{}, msg string) {
 		}
 
 		if isNil {
-			t.Fatalf("%s - expected to not be nil\n     - kind: '%v%'\n     - actual:'%v'\n     - reflect.ValueOf(actual):'%v'", msg, k, actual, value)
+			t.Fatalf("%s - expected to not be nil\n"+
+				"     - kind: '%v%'\n"+
+				"     - actual:'%v'\n"+
+				"     - reflect.ValueOf(actual):'%v'",
+				msg, k, actual, value)
 		}
 	}
 }

@@ -4,6 +4,7 @@ import (
 	"crypto/hmac"
 	"crypto/sha1"
 	"encoding/hex"
+	"hash"
 	"io/ioutil"
 	"net/http"
 )
@@ -26,7 +27,8 @@ func ReadRequest(secret []byte, r *http.Request) (GitHubEventType, []byte, error
 		return "", nil, err
 	}
 
-	if ok := checkMAC(body, messageMAC, secret); !ok {
+	sha1hmac := hmac.New(sha1.New, secret)
+	if ok := checkMAC(sha1hmac, body, messageMAC); !ok {
 		return "", nil, ErrSignatureMismatch
 	}
 
@@ -69,8 +71,7 @@ func getMAC(r *http.Request) ([]byte, error) {
 	}
 }
 
-func checkMAC(message, messageMAC, key []byte) bool {
-	mac := hmac.New(sha1.New, key)
+func checkMAC(mac hash.Hash, message, messageMAC []byte) bool {
 	if _, err := mac.Write(message); err != nil {
 		return false
 	}
