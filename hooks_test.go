@@ -286,7 +286,7 @@ func TestReadRequest_MatchesExpected(t *testing.T) {
 		expectNotNil(t, eventType, "eventType")
 		expectNotNil(t, bodyBytes, "bodyBytes")
 
-		expect(t, Push, eventType, "eventType")
+		expect(t, PushEventType, eventType, "eventType")
 		expect(t, "message", string(bodyBytes), "bodyBytes")
 	}))
 	defer ts.Close()
