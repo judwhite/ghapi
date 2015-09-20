@@ -1,6 +1,7 @@
 package ghapi
 
 import (
+	"encoding/json"
 	"io/ioutil"
 	"net/http"
 	"testing"
@@ -189,7 +190,7 @@ func TestIssueApi_DeleteIssueComment_404(t *testing.T) {
 	err := api.Issue.DeleteIssueComment(2)
 	if err != nil {
 		if e, ok := err.(*ErrHttpError); !ok {
-			t.Fatal("err is not of type *ErrHttpError")
+			t.Fatalf("err is not of type *ErrHttpError, is %T", err)
 		} else {
 			expect(t, 404, e.StatusCode, "e.StatusCode")
 		}
@@ -268,4 +269,57 @@ func TestIssueApi_GetIssue(t *testing.T) {
 	expect(t, date("2011-04-22T13:33:48Z"), issue.UpdatedAt, "issue.UpdatedAt")
 
 	expect_octocat_user(t, issue.ClosedBy, "issue.ClosedBy")
+}
+
+func TestIssueApi_GetIssue_ReturnsErrOnHttpErr(t *testing.T) {
+	ts, api := makeGitHubApiTestServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.URL != nil && r.URL.Path == "/repos/test_owner/test_repository/issues/1347" {
+			w.WriteHeader(500)
+		} else {
+			t.Fatalf("unexpected url %s", r.URL)
+		}
+	}))
+	defer ts.Close()
+
+	issue, err := api.Issue.GetIssue(1347)
+
+	expectNil(t, issue, "issue")
+
+	if err != nil {
+		if e, ok := err.(*ErrHttpError); !ok {
+			t.Fatalf("err is not of type *ErrHttpError, is %T", err)
+		} else {
+			expect(t, 500, e.StatusCode, "e.StatusCode")
+		}
+	} else {
+		t.Fatal("expected error")
+	}
+}
+
+func TestIssueApi_GetIssue_ReturnsErrOnJsonDecodeErr(t *testing.T) {
+	ts, api := makeGitHubApiTestServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.URL != nil && r.URL.Path == "/repos/test_owner/test_repository/issues/1347" {
+			_, err := w.Write([]byte("junk" + get_issue_1_response))
+			if err != nil {
+				t.Fatal(err)
+			}
+		} else {
+			t.Fatalf("unexpected url %s", r.URL)
+		}
+	}))
+	defer ts.Close()
+
+	issue, err := api.Issue.GetIssue(1347)
+
+	expectNil(t, issue, "issue")
+
+	if err != nil {
+		if e, ok := err.(*json.SyntaxError); !ok {
+			t.Fatalf("err is not of type *json.SyntaxError, is %T", err)
+		} else {
+			expect(t, "invalid character 'j' looking for beginning of value", e.Error(), "e.Error()")
+		}
+	} else {
+		t.Fatal("expected error")
+	}
 }

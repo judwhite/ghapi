@@ -112,9 +112,7 @@ func (api *IssueApi) UpdateIssueAssignee(issueNumber int, assignee string) error
 func (api *IssueApi) UpdateIssueAssigneeByUrl(url, assignee string) error {
 	data := struct {
 		Assignee string `json:"assignee"`
-	}{
-		assignee,
-	}
+	}{assignee}
 
 	b, err := json.Marshal(data)
 	if err != nil {
