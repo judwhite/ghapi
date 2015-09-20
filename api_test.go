@@ -1,6 +1,7 @@
 package ghapi
 
 import (
+	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
 	"reflect"
@@ -24,8 +25,20 @@ func expect(t *testing.T, expected, actual interface{}, msg string) {
 }
 
 func expectNotNil(t *testing.T, actual interface{}, msg string) {
-	if actual == nil || reflect.ValueOf(actual).IsNil() {
-		t.Fatalf("%s - expected to not be '%v'", msg, actual)
+	if actual == nil {
+		t.Fatalf("%s - expected to not be nil\n     - actual: '%v'", msg, actual)
+	} else {
+		value := reflect.ValueOf(actual)
+		k := value.Kind()
+		isNil := false
+		switch k {
+		case reflect.Chan, reflect.Func, reflect.Map, reflect.Ptr, reflect.Interface, reflect.Slice:
+			isNil = value.IsNil()
+		}
+
+		if isNil {
+			t.Fatalf("%s - expected to not be nil\n     - kind: '%v%'\n     - actual:'%v'\n     - reflect.ValueOf(actual):'%v'", msg, k, actual, value)
+		}
 	}
 }
 
@@ -90,16 +103,16 @@ func TestApiInfo_addBaseUrl(t *testing.T) {
 
 func TestApiInfo_doHttpRequest_ReturnsErrOnParseError(t *testing.T) {
 	api := makeGitHubApi()
-	req, err := api.doHttpRequest("GET", ":/noscheme", nil)
-	expectNil(t, req, "req")
+	resp, err := api.doHttpRequest("GET", ":/noscheme", nil)
+	expectNil(t, resp, "resp")
 	expectNotNil(t, err, "err")
 	expect(t, "parse :/noscheme: missing protocol scheme", err.Error(), "err.Error()")
 }
 
 func TestApiInfo_doHttpRequest_ReturnsErrOnDoError(t *testing.T) {
 	api := makeGitHubApi()
-	req, err := api.doHttpRequest("GET", "http://0.0.0.0:0/wat", nil)
-	expectNil(t, req, "req")
+	resp, err := api.doHttpRequest("GET", "http://0.0.0.0:0/wat", nil)
+	expectNil(t, resp, "resp")
 	expectNotNil(t, err, "err")
 	expect(t, "Get http://0.0.0.0:0/wat: dial tcp 0.0.0.0:0: connectex: The requested address is not valid in its context.", err.Error(), "err.Error()")
 }
@@ -123,6 +136,7 @@ func TestApiInfo_doHttpRequest_HasHeadersSet(t *testing.T) {
 
 	expectNotNil(t, resp, "resp")
 	expectNil(t, err, "err")
+	defer resp.Body.Close()
 }
 
 func TestApiInfo_doHttpRequest_AuthorizationHeadersNotSetWhenAuthTokenIsEmpty(t *testing.T) {
@@ -130,9 +144,9 @@ func TestApiInfo_doHttpRequest_AuthorizationHeadersNotSetWhenAuthTokenIsEmpty(t 
 	ts, api := makeGitHubApiTestServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		signal <- struct{}{}
 		if r.URL != nil && r.URL.Path == "/test_headers" {
-			expect(t, "application/vnd.github.v3+json", r.Header.Get("Accept"), "r.Header[\"Accept\"]")
-			expect(t, "application/json", r.Header.Get("Content-Type"), "r.Header[\"Content-Type\"]")
-			expect(t, "", r.Header.Get("Authorization"), "r.Header[\"Authorization\"]")
+			expect(t, "application/vnd.github.v3+json", r.Header.Get("Accept"), "r.Header.Get(\"Accept\")")
+			expect(t, "application/json", r.Header.Get("Content-Type"), "r.Header.Get(\"Content-Type\")")
+			expect(t, 0, len(r.Header["Authorization"]), "len(r.Header[\"Authorization\"])")
 		} else {
 			t.Fatalf("unexpected URL %v", r.URL)
 		}
@@ -145,6 +159,7 @@ func TestApiInfo_doHttpRequest_AuthorizationHeadersNotSetWhenAuthTokenIsEmpty(t 
 
 	expectNotNil(t, resp, "resp")
 	expectNil(t, err, "err")
+	defer resp.Body.Close()
 }
 
 func TestRepositoryInfo_getUrl(t *testing.T) {
@@ -155,4 +170,71 @@ func TestRepositoryInfo_getUrl(t *testing.T) {
 	actual := issueApi.getUrl("/:owner/:repo/suffix")
 
 	expect(t, expected, actual, "getUrl")
+}
+
+func TestRepositoryInfo_httpPatch(t *testing.T) {
+	const expectedBody string = "expected body"
+
+	signal := make(chan struct{}, 1)
+	ts, api := makeGitHubApiTestServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		signal <- struct{}{}
+		if r.URL != nil && r.URL.Path == "/test_patch" {
+			expectNotNil(t, r.Body, "r.Body")
+			b, err := ioutil.ReadAll(r.Body)
+			if err != nil {
+				t.Fatal(err)
+				return
+			}
+			expect(t, expectedBody, string(b), "b")
+		} else {
+			t.Fatalf("unexpected URL %v", r.URL)
+		}
+	}))
+	defer ts.Close()
+
+	resp, err := api.httpPatch(ts.URL+"/test_patch", expectedBody)
+	<-signal
+
+	expectNotNil(t, resp, "resp")
+	expectNil(t, err, "err")
+	defer resp.Body.Close()
+}
+
+func TestRepositoryInfo_httpPatch_ErrorPopulated(t *testing.T) {
+	const expectedRequestBody string = "expected request body"
+	const expectedResponseBody string = "expected response body"
+
+	signal := make(chan struct{}, 1)
+	ts, api := makeGitHubApiTestServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		signal <- struct{}{}
+		if r.URL != nil && r.URL.Path == "/test_patch" {
+			w.WriteHeader(404)
+			_, err := w.Write([]byte(expectedResponseBody))
+			if err != nil {
+				t.Fatal(err)
+			}
+		} else {
+			t.Fatalf("unexpected URL %v", r.URL)
+		}
+	}))
+	defer ts.Close()
+
+	expectedUrl := ts.URL + "/test_patch"
+	resp, err := api.httpPatch(expectedUrl, expectedRequestBody)
+	<-signal
+
+	expectNil(t, resp, "resp")
+	expectNotNil(t, err, "err")
+
+	e, ok := err.(*ErrHttpError)
+	if !ok {
+		t.Fatal("err is not of type *ErrHttpError")
+	}
+
+	expect(t, "404 Not Found", e.Status, "e.Status")
+	expect(t, 404, e.StatusCode, "e.StatusCode")
+	expect(t, "PATCH", e.Method, "e.Method")
+	expect(t, expectedRequestBody, e.RequestBody, "e.RequestBody")
+	expect(t, expectedResponseBody, e.ResponseBody, "e.ResponseBody")
+	expect(t, expectedUrl, e.Url, "e.Url")
 }

@@ -188,8 +188,8 @@ func TestIssueApi_DeleteIssueComment_404(t *testing.T) {
 
 	err := api.Issue.DeleteIssueComment(2)
 	if err != nil {
-		if e, ok := err.(ErrHttpError); !ok {
-			t.Fatal("err is not of type ErrHttpError")
+		if e, ok := err.(*ErrHttpError); !ok {
+			t.Fatal("err is not of type *ErrHttpError")
 		} else {
 			expect(t, 404, e.StatusCode, "e.StatusCode")
 		}

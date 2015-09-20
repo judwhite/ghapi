@@ -111,7 +111,15 @@ func (apiInfo *ApiInfo) doHttpRequest(method, url string, body *string) (*http.R
 		if body != nil {
 			requestBody = *body
 		}
-		return nil, ErrHttpError{Status: resp.Status, StatusCode: resp.StatusCode, Url: url, RequestBody: requestBody, ResponseBody: responseBody}
+		err = &ErrHttpError{
+			Status:       resp.Status,
+			StatusCode:   resp.StatusCode,
+			Method:       method,
+			Url:          url,
+			RequestBody:  requestBody,
+			ResponseBody: responseBody,
+		}
+		return nil, err
 	}
 
 	return resp, nil
