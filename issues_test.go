@@ -153,41 +153,41 @@ func expect_octocat_user(t *testing.T, u *UserPayload, prefix string) {
 }
 
 func TestIssueApi_DeleteIssueComment(t *testing.T) {
-	ts, api := makeGitHubApiTestServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	ts, api, signal := makeGitHubApiTestServer(func(w http.ResponseWriter, r *http.Request) {
 		if r.URL != nil && r.URL.Path == "/repos/test_owner/test_repository/issues/comments/1" {
 
 			b, err := ioutil.ReadAll(r.Body)
-			if err != nil {
-				t.Fatal(err)
-			}
-			body := string(b)
 
+			expectNil(t, err, "err")
 			expect(t, "DELETE", r.Method, "r.Method")
-			expect(t, "", body, "r.Body")
+			expect(t, "", string(b), "r.Body")
+
 			w.WriteHeader(200)
 		} else {
 			w.WriteHeader(404)
 		}
-	}))
+	})
 	defer ts.Close()
 
 	err := api.Issue.DeleteIssueComment(1)
-	if err != nil {
-		t.Fatal(err)
-	}
+	waitSignal(t, signal)
+
+	expectNil(t, err, "err")
 }
 
 func TestIssueApi_DeleteIssueComment_404(t *testing.T) {
-	ts, api := makeGitHubApiTestServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	ts, api, signal := makeGitHubApiTestServer(func(w http.ResponseWriter, r *http.Request) {
 		if r.URL != nil && r.URL.Path == "/repos/test_owner/test_repository/issues/comments/1" {
 			w.WriteHeader(200)
 		} else {
 			w.WriteHeader(404)
 		}
-	}))
+	})
 	defer ts.Close()
 
 	err := api.Issue.DeleteIssueComment(2)
+	waitSignal(t, signal)
+
 	if err != nil {
 		if e, ok := err.(*ErrHttpError); !ok {
 			t.Fatalf("err is not of type *ErrHttpError, is %T", err)
@@ -200,19 +200,26 @@ func TestIssueApi_DeleteIssueComment_404(t *testing.T) {
 }
 
 func TestIssueApi_GetIssue(t *testing.T) {
-	ts, api := makeGitHubApiTestServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	ts, api, signal := makeGitHubApiTestServer(func(w http.ResponseWriter, r *http.Request) {
 		if r.URL != nil && r.URL.Path == "/repos/test_owner/test_repository/issues/1347" {
-			_, err := w.Write([]byte(get_issue_1_response))
-			if err != nil {
-				t.Fatal(err)
-			}
+			b, err := ioutil.ReadAll(r.Body)
+
+			expectNil(t, err, "err")
+
+			_, err = w.Write([]byte(get_issue_1_response))
+
+			expectNil(t, err, "err")
+			expect(t, "GET", r.Method, "r.Method")
+			expect(t, "", string(b), "r.Body")
 		} else {
 			w.WriteHeader(404)
 		}
-	}))
+	})
 	defer ts.Close()
 
 	issue, err := api.Issue.GetIssue(1347)
+	waitSignal(t, signal)
+
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -272,16 +279,17 @@ func TestIssueApi_GetIssue(t *testing.T) {
 }
 
 func TestIssueApi_GetIssue_ReturnsErrOnHttpErr(t *testing.T) {
-	ts, api := makeGitHubApiTestServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	ts, api, signal := makeGitHubApiTestServer(func(w http.ResponseWriter, r *http.Request) {
 		if r.URL != nil && r.URL.Path == "/repos/test_owner/test_repository/issues/1347" {
 			w.WriteHeader(500)
 		} else {
 			t.Fatalf("unexpected url %s", r.URL)
 		}
-	}))
+	})
 	defer ts.Close()
 
 	issue, err := api.Issue.GetIssue(1347)
+	waitSignal(t, signal)
 
 	expectNil(t, issue, "issue")
 
@@ -297,7 +305,7 @@ func TestIssueApi_GetIssue_ReturnsErrOnHttpErr(t *testing.T) {
 }
 
 func TestIssueApi_GetIssue_ReturnsErrOnJsonDecodeErr(t *testing.T) {
-	ts, api := makeGitHubApiTestServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	ts, api, signal := makeGitHubApiTestServer(func(w http.ResponseWriter, r *http.Request) {
 		if r.URL != nil && r.URL.Path == "/repos/test_owner/test_repository/issues/1347" {
 			_, err := w.Write([]byte("junk" + get_issue_1_response))
 			if err != nil {
@@ -306,10 +314,11 @@ func TestIssueApi_GetIssue_ReturnsErrOnJsonDecodeErr(t *testing.T) {
 		} else {
 			t.Fatalf("unexpected url %s", r.URL)
 		}
-	}))
+	})
 	defer ts.Close()
 
 	issue, err := api.Issue.GetIssue(1347)
+	waitSignal(t, signal)
 
 	expectNil(t, issue, "issue")
 
@@ -322,4 +331,30 @@ func TestIssueApi_GetIssue_ReturnsErrOnJsonDecodeErr(t *testing.T) {
 	} else {
 		t.Fatal("expected error")
 	}
+}
+
+func TestIssueApi_UpdateIssueAssignee(t *testing.T) {
+	ts, api, signal := makeGitHubApiTestServer(func(w http.ResponseWriter, r *http.Request) {
+		if r.URL != nil && r.URL.Path == "/repos/test_owner/test_repository/issues/1347" {
+
+			b, err := ioutil.ReadAll(r.Body)
+
+			expectNil(t, err, "err")
+
+			_, err = w.Write([]byte("junk" + get_issue_1_response))
+
+			expectNil(t, err, "err")
+			expect(t, "PATCH", r.Method, "r.Method")
+			expect(t, `{"assignee":"new-assignee"}`, string(b), "r.Body")
+		} else {
+			t.Fatalf("unexpected url %s", r.URL)
+			w.WriteHeader(404)
+		}
+	})
+	defer ts.Close()
+
+	err := api.Issue.UpdateIssueAssignee(1347, "new-assignee")
+	waitSignal(t, signal)
+
+	expectNil(t, err, "err")
 }

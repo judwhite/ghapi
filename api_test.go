@@ -1,6 +1,7 @@
 package ghapi
 
 import (
+	"fmt"
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
@@ -71,10 +72,24 @@ func makeGitHubApi() GitHubApi {
 	return NewGitHubApi(expectedBaseUrl, expectedOwner, expectedRepository, expectedAuthToken)
 }
 
-func makeGitHubApiTestServer(handler http.Handler) (*httptest.Server, GitHubApi) {
-	httptestServer := httptest.NewServer(handler)
+func makeGitHubApiTestServer(handler func(w http.ResponseWriter, r *http.Request)) (*httptest.Server, GitHubApi, chan struct{}) {
+	signal := make(chan struct{}, 1)
+	httptestServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		handler(w, r)
+		signal <- struct{}{}
+	}))
 	api := NewGitHubApi(httptestServer.URL, expectedOwner, expectedRepository, expectedAuthToken)
-	return httptestServer, api
+	return httptestServer, api, signal
+}
+
+func waitSignal(t *testing.T, signal <-chan struct{}) {
+	ticker := time.NewTicker(5 * time.Second)
+	select {
+	case <-signal:
+		return
+	case <-ticker.C:
+		t.Fatal("timeout")
+	}
 }
 
 func TestNewGitHubApi(t *testing.T) {
@@ -122,9 +137,8 @@ func TestApiInfo_doHttpRequest_ReturnsErrOnDoError(t *testing.T) {
 }
 
 func TestApiInfo_doHttpRequest_HasHeadersSet(t *testing.T) {
-	signal := make(chan struct{}, 1)
-	ts, api := makeGitHubApiTestServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		signal <- struct{}{}
+	ts, api, signal := makeGitHubApiTestServer(func(w http.ResponseWriter, r *http.Request) {
+		fmt.Println(r.URL)
 		if r.URL != nil && r.URL.Path == "/test_headers" {
 			expect(t, "application/vnd.github.v3+json", r.Header.Get("Accept"), "r.Header[\"Accept\"]")
 			expect(t, "application/json", r.Header.Get("Content-Type"), "r.Header[\"Content-Type\"]")
@@ -132,11 +146,11 @@ func TestApiInfo_doHttpRequest_HasHeadersSet(t *testing.T) {
 		} else {
 			t.Fatalf("unexpected URL %v", r.URL)
 		}
-	}))
+	})
 	defer ts.Close()
 
 	resp, err := api.doHttpRequest("GET", ts.URL+"/test_headers", nil)
-	<-signal
+	waitSignal(t, signal)
 
 	expectNotNil(t, resp, "resp")
 	expectNil(t, err, "err")
@@ -144,9 +158,7 @@ func TestApiInfo_doHttpRequest_HasHeadersSet(t *testing.T) {
 }
 
 func TestApiInfo_doHttpRequest_AuthorizationHeadersNotSetWhenAuthTokenIsEmpty(t *testing.T) {
-	signal := make(chan struct{}, 1)
-	ts, api := makeGitHubApiTestServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		signal <- struct{}{}
+	ts, api, signal := makeGitHubApiTestServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if r.URL != nil && r.URL.Path == "/test_headers" {
 			expect(t, "application/vnd.github.v3+json", r.Header.Get("Accept"), "r.Header.Get(\"Accept\")")
 			expect(t, "application/json", r.Header.Get("Content-Type"), "r.Header.Get(\"Content-Type\")")
@@ -159,7 +171,7 @@ func TestApiInfo_doHttpRequest_AuthorizationHeadersNotSetWhenAuthTokenIsEmpty(t 
 
 	api.OAuth2Token = ""
 	resp, err := api.doHttpRequest("GET", ts.URL+"/test_headers", nil)
-	<-signal
+	waitSignal(t, signal)
 
 	expectNotNil(t, resp, "resp")
 	expectNil(t, err, "err")
@@ -179,9 +191,7 @@ func TestRepositoryInfo_getUrl(t *testing.T) {
 func TestRepositoryInfo_httpPatch(t *testing.T) {
 	const expectedBody string = "expected body"
 
-	signal := make(chan struct{}, 1)
-	ts, api := makeGitHubApiTestServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		signal <- struct{}{}
+	ts, api, signal := makeGitHubApiTestServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if r.URL != nil && r.URL.Path == "/test_patch" {
 			expectNotNil(t, r.Body, "r.Body")
 			b, err := ioutil.ReadAll(r.Body)
@@ -197,7 +207,7 @@ func TestRepositoryInfo_httpPatch(t *testing.T) {
 	defer ts.Close()
 
 	resp, err := api.httpPatch(ts.URL+"/test_patch", expectedBody)
-	<-signal
+	waitSignal(t, signal)
 
 	expectNotNil(t, resp, "resp")
 	expectNil(t, err, "err")
@@ -208,9 +218,7 @@ func TestRepositoryInfo_httpPatch_ErrorPopulated(t *testing.T) {
 	const expectedRequestBody string = "expected request body"
 	const expectedResponseBody string = "expected response body"
 
-	signal := make(chan struct{}, 1)
-	ts, api := makeGitHubApiTestServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		signal <- struct{}{}
+	ts, api, signal := makeGitHubApiTestServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if r.URL != nil && r.URL.Path == "/test_patch" {
 			w.WriteHeader(404)
 			_, err := w.Write([]byte(expectedResponseBody))
@@ -225,7 +233,7 @@ func TestRepositoryInfo_httpPatch_ErrorPopulated(t *testing.T) {
 
 	expectedUrl := ts.URL + "/test_patch"
 	resp, err := api.httpPatch(expectedUrl, expectedRequestBody)
-	<-signal
+	waitSignal(t, signal)
 
 	expectNil(t, resp, "resp")
 	expectNotNil(t, err, "err")

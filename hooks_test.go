@@ -12,31 +12,6 @@ import (
 	"testing"
 )
 
-/*
-func TestReadRequest(t *testing.T) {
-	signal := make(chan struct{}, 1)
-	secret := []byte("webhook_secret")
-	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		signal <- struct{}{}
-		_, _, err := ReadRequest(secret, r)
-		if err != nil {
-			t.Fatal(err)
-		}
-	}))
-	defer ts.Close()
-
-	body := strings.NewReader("{ method: \"test\" }")
-	req, err := http.NewRequest("POST", ts.URL, body)
-	resp, err := http.DefaultClient.Do(req)
-	if err != nil {
-		t.Fatal(err)
-	}
-	defer resp.Body.Close()
-
-	<-signal
-}
-*/
-
 func TestReadRequest_FailsWhenXHubSignatureNotPresent(t *testing.T) {
 	signal := make(chan struct{}, 1)
 	secret := []byte("webhook_secret")
@@ -62,7 +37,7 @@ func TestReadRequest_FailsWhenXHubSignatureNotPresent(t *testing.T) {
 	}
 	defer resp.Body.Close()
 
-	<-signal
+	waitSignal(t, signal)
 }
 
 func TestReadRequest_FailsWhenXHubSignatureMarkerNotPresent(t *testing.T) {
@@ -91,7 +66,7 @@ func TestReadRequest_FailsWhenXHubSignatureMarkerNotPresent(t *testing.T) {
 	}
 	defer resp.Body.Close()
 
-	<-signal
+	waitSignal(t, signal)
 }
 
 func TestReadRequest_FailsWhenXGithubEventNotPresent(t *testing.T) {
@@ -120,7 +95,7 @@ func TestReadRequest_FailsWhenXGithubEventNotPresent(t *testing.T) {
 	}
 	defer resp.Body.Close()
 
-	<-signal
+	waitSignal(t, signal)
 }
 
 func TestReadRequest_FailsWhenRequestBodyIsNil(t *testing.T) {
@@ -249,7 +224,7 @@ func TestReadRequest_FailsWhenMACDoesntMatchExpected(t *testing.T) {
 	}
 	defer resp.Body.Close()
 
-	<-signal
+	waitSignal(t, signal)
 }
 
 func TestReadRequest_FailsWhenXGithubEventHeaderNotFound(t *testing.T) {
@@ -272,7 +247,7 @@ func TestReadRequest_FailsWhenXGithubEventHeaderNotFound(t *testing.T) {
 	}
 	defer resp.Body.Close()
 
-	<-signal
+	waitSignal(t, signal)
 }
 
 func TestReadRequest_MatchesExpected(t *testing.T) {
@@ -301,5 +276,5 @@ func TestReadRequest_MatchesExpected(t *testing.T) {
 	}
 	defer resp.Body.Close()
 
-	<-signal
+	waitSignal(t, signal)
 }
