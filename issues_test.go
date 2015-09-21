@@ -213,7 +213,7 @@ func expect_issue_1347(t *testing.T, issue *IssuePayload) {
 	expect_octocat_user(t, issue.ClosedBy, "issue.ClosedBy")
 }
 
-func expect_octocat_user(t *testing.T, u *UserPayload, prefix string) {
+func expect_octocat_user(t *testing.T, u *User, prefix string) {
 	expectNotNil(t, u, prefix)
 
 	expect(t, "octocat", u.Login, prefix+".Login")
@@ -324,16 +324,7 @@ func TestIssueApi_GetIssue_ReturnsErrOnHttpErr(t *testing.T) {
 	waitSignal(t, signal)
 
 	expectNil(t, issue, "issue")
-
-	if err != nil {
-		if e, ok := err.(*ErrHttpError); !ok {
-			t.Fatalf("err is not of type *ErrHttpError, is %T", err)
-		} else {
-			expect(t, 500, e.StatusCode, "e.StatusCode")
-		}
-	} else {
-		t.Fatal("expected error")
-	}
+	expectErrHttpError500(t, err)
 }
 
 func TestIssueApi_GetIssue_ReturnsErrOnJsonDecodeErr(t *testing.T) {
@@ -353,16 +344,7 @@ func TestIssueApi_GetIssue_ReturnsErrOnJsonDecodeErr(t *testing.T) {
 	waitSignal(t, signal)
 
 	expectNil(t, issue, "issue")
-
-	if err != nil {
-		if e, ok := err.(*json.SyntaxError); !ok {
-			t.Fatalf("err is not of type *json.SyntaxError, is %T", err)
-		} else {
-			expect(t, "invalid character 'j' looking for beginning of value", e.Error(), "e.Error()")
-		}
-	} else {
-		t.Fatal("expected error")
-	}
+	expectJsonSyntaxError(t, err, "invalid character 'j' looking for beginning of value")
 }
 
 func TestIssueApi_UpdateIssueAssignee(t *testing.T) {
@@ -451,15 +433,7 @@ func TestIssueApi_UpdateIssueAssignee_ReturnsErrOnJsonDecodeErr(t *testing.T) {
 	waitSignal(t, signal)
 
 	expectNil(t, issue, "issue")
-	if err != nil {
-		if e, ok := err.(*json.SyntaxError); !ok {
-			t.Fatalf("err is not of type *json.SyntaxError, is %T", err)
-		} else {
-			expect(t, "invalid character 'j' looking for beginning of value", e.Error(), "e.Error()")
-		}
-	} else {
-		t.Fatal("expected error")
-	}
+	expectJsonSyntaxError(t, err, "invalid character 'j' looking for beginning of value")
 }
 
 func TestIssueApi_updateIssueByUrl_ReturnsErrOnJsonMarshalErr(t *testing.T) {
@@ -579,15 +553,6 @@ func TestIssueApi_GetIssueComment_ReturnsErrOnJsonDecodeErr(t *testing.T) {
 	issueComment, err := api.Issue.GetIssueComment(1)
 	waitSignal(t, signal)
 
-	expectNotNil(t, err, "err")
 	expectNil(t, issueComment, "issueComment")
-	if err != nil {
-		if e, ok := err.(*json.SyntaxError); !ok {
-			t.Fatalf("err is not of type *json.SyntaxError, is %T", err)
-		} else {
-			expect(t, "invalid character 'j' looking for beginning of value", e.Error(), "e.Error()")
-		}
-	} else {
-		t.Fatal("expected error")
-	}
+	expectJsonSyntaxError(t, err, "invalid character 'j' looking for beginning of value")
 }

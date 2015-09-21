@@ -2,7 +2,7 @@ package ghapi
 
 type GithubEventPayload struct {
 	Repository RepositoryPayload `json:"repository"`
-	Sender     UserPayload       `json:"sender"`
+	Sender     User              `json:"sender"`
 }
 
 type PullRequestEventPayload struct {

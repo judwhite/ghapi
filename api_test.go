@@ -1,7 +1,7 @@
 package ghapi
 
 import (
-	"fmt"
+	"encoding/json"
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
@@ -50,6 +50,30 @@ func expectNotNil(t *testing.T, actual interface{}, msg string) {
 func expectNil(t *testing.T, actual interface{}, msg string) {
 	if actual != nil && !reflect.ValueOf(actual).IsNil() {
 		t.Fatalf("%s - '%v' expected to not be <nil>", msg, actual)
+	}
+}
+
+func expectErrHttpError500(t *testing.T, err error) {
+	if err != nil {
+		if e, ok := err.(*ErrHttpError); !ok {
+			t.Fatalf("err is not of type *ErrHttpError, is %T", err)
+		} else {
+			expect(t, 500, e.StatusCode, "e.StatusCode")
+		}
+	} else {
+		t.Fatal("expected error")
+	}
+}
+
+func expectJsonSyntaxError(t *testing.T, err error, expectedMessage string) {
+	if err != nil {
+		if e, ok := err.(*json.SyntaxError); !ok {
+			t.Fatalf("err is not of type *json.SyntaxError, is %T", err)
+		} else {
+			expect(t, expectedMessage, e.Error(), "e.Error()")
+		}
+	} else {
+		t.Fatal("expected error")
 	}
 }
 
@@ -138,7 +162,6 @@ func TestApiInfo_doHttpRequest_ReturnsErrOnDoError(t *testing.T) {
 
 func TestApiInfo_doHttpRequest_HasHeadersSet(t *testing.T) {
 	ts, api, signal := makeGitHubApiTestServer(func(w http.ResponseWriter, r *http.Request) {
-		fmt.Println(r.URL)
 		if r.URL != nil && r.URL.Path == "/test_headers" {
 			expect(t, "application/vnd.github.v3+json", r.Header.Get("Accept"), "r.Header[\"Accept\"]")
 			expect(t, "application/json", r.Header.Get("Content-Type"), "r.Header[\"Content-Type\"]")

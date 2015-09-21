@@ -4,15 +4,11 @@ import "time"
 
 // The organization which the event occurred on.
 type OrganizationPayload struct {
-	Login             string                   `json:"login"`
-	Id                int                      `json:"id"`
-	Url               string                   `json:"url"`
+	UserOrganizationPayload
 	ReposUrl          string                   `json:"repos_url"`
 	EventsUrl         string                   `json:"events_url"`
 	MembersUrl        string                   `json:"members_url"`
 	PublicMembersUrl  string                   `json:"public_members_url"`
-	AvatarUrl         string                   `json:"avatar_url"`
-	Description       string                   `json:"description"`
 	PublicRepos       int                      `json:"public_repos"`
 	PublicGists       int                      `json:"public_gists"`
 	Followers         int                      `json:"followers"`
@@ -28,6 +24,14 @@ type OrganizationPayload struct {
 	Collaborators     int                      `json:"collaborators"`
 	BillingEmail      string                   `json:"billing_email"`
 	Plan              *OrganizationPlanPayload `json:"plan"`
+}
+
+type UserOrganizationPayload struct {
+	Login       string `json:"login"`
+	Id          int    `json:"id"`
+	Url         string `json:"url"`
+	AvatarUrl   string `json:"avatar_url"`
+	Description string `json:"description"`
 }
 
 type OrganizationPlanPayload struct {
