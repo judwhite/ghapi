@@ -104,26 +104,37 @@ func (api *IssueApi) GetIssueByUrl(url string) (*IssuePayload, error) {
 	return issue, nil
 }
 
-func (api *IssueApi) UpdateIssueAssignee(issueNumber int, assignee string) error {
+func (api *IssueApi) UpdateIssueAssignee(issueNumber int, assignee string) (*IssuePayload, error) {
 	url := api.getUrl("/repos/:owner/:repo/issues/" + strconv.Itoa(issueNumber))
 	return api.UpdateIssueAssigneeByUrl(url, assignee)
 }
 
-func (api *IssueApi) UpdateIssueAssigneeByUrl(url, assignee string) error {
-	data := struct {
+func (api *IssueApi) UpdateIssueAssigneeByUrl(url, assignee string) (*IssuePayload, error) {
+	body := struct {
 		Assignee string `json:"assignee"`
 	}{assignee}
 
-	b, err := json.Marshal(data)
+	return api.updateIssueByUrl(url, body)
+}
+
+func (api *IssueApi) updateIssueByUrl(url string, body interface{}) (*IssuePayload, error) {
+	b, err := json.Marshal(body)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	resp, err := api.httpPatch(url, string(b))
 	if err != nil {
-		return err
+		return nil, err
 	}
 	defer resp.Body.Close()
 
-	return nil
+	issue := &IssuePayload{}
+
+	j := json.NewDecoder(resp.Body)
+	if err = j.Decode(&issue); err != nil {
+		return nil, err
+	}
+
+	return issue, nil
 }
