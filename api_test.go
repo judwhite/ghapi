@@ -49,7 +49,7 @@ func expectNotNil(t *testing.T, actual interface{}, msg string) {
 
 func expectNil(t *testing.T, actual interface{}, msg string) {
 	if actual != nil && !reflect.ValueOf(actual).IsNil() {
-		t.Fatalf("%s - '%v' expected to not be <nil>", msg, actual)
+		t.Fatalf("%s - '%v' expected to be <nil>", msg, actual)
 	}
 }
 
