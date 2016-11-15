@@ -24,6 +24,7 @@ type GitHubApi struct {
 	Issue        IssueApi
 	User         UserApi
 	Organization OrganizationApi
+	PullRequest  PullRequestsApi
 }
 
 type IssueApi struct {
@@ -57,6 +58,7 @@ func NewGitHubApi(baseUrl, owner, repository, authToken string) GitHubApi {
 	gitHubApi.Issue = IssueApi{RepositoryInfo: repositoryInfo}
 	gitHubApi.User = UserApi{ApiInfo: apiInfo}
 	gitHubApi.Organization = OrganizationApi{ApiInfo: apiInfo}
+	gitHubApi.PullRequest = PullRequestsApi{RepositoryInfo: repositoryInfo}
 
 	return gitHubApi
 }
