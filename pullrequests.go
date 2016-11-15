@@ -1,6 +1,8 @@
 package ghapi
 
 import (
+	"encoding/json"
+	"strconv"
 	"time"
 )
 
@@ -51,8 +53,8 @@ type PullRequestPayload struct {
 	Body              string            `json:"body"`
 	CreatedAt         time.Time         `json:"created_at"`
 	UpdatedAt         time.Time         `json:"updated_at"`
-	ClosedAt          time.Time         `json:"closed_at"`
-	MergedAt          time.Time         `json:"merged_at"`
+	ClosedAt          *time.Time        `json:"closed_at"`
+	MergedAt          *time.Time        `json:"merged_at"`
 	MergeCommitSha    string            `json:"merge_commit_sha"`
 	Assignee          *User             `json:"assignee"`
 	Assignees         []User            `json:"assignees"`
@@ -333,3 +335,22 @@ type PullRequestPayload struct {
 	_ = p.getUrl("/repos/:owner/:repo/pulls")
 	return nil, nil
 }*/
+
+func (api *PullRequestsApi) GetPullRequest(pullRequestNumber int) (*PullRequestPayload, error) {
+	url := api.getUrl("/repos/:owner/:repo/pulls/" + strconv.Itoa(pullRequestNumber))
+
+	resp, err := api.httpGet(url)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	pullRequest := &PullRequestPayload{}
+
+	j := json.NewDecoder(resp.Body)
+	if err = j.Decode(&pullRequest); err != nil {
+		return nil, err
+	}
+
+	return pullRequest, nil
+}
