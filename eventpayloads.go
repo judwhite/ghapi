@@ -1,8 +1,39 @@
 package ghapi
 
+import "time"
+
 type GitHubEventPayload struct {
 	Repository RepositoryPayload `json:"repository"`
 	Sender     User              `json:"sender"`
+}
+
+type PingEventPayload struct {
+	GitHubEventPayload
+	Zen    string `json:"zen"`
+	HookID int    `json:"hook_id"`
+	Hook   struct {
+		Type   string   `json:"type"`
+		ID     int      `json:"id"`
+		Name   string   `json:"name"`
+		Active bool     `json:"active"`
+		Events []string `json:"events"`
+		Config struct {
+			ContentType string `json:"content_type"`
+			InsecureSSL string `json:"insecure_ssl"`
+			Secret      string `json:"secret"`
+			URL         string `json:"url"`
+		} `json:"config"`
+		UpdatedAt    time.Time `json:"updated_at"`
+		CreatedAt    time.Time `json:"created_at"`
+		URL          string    `json:"url"`
+		TestURL      string    `json:"test_url"`
+		PingURL      string    `json:"ping_url"`
+		LastResponse struct {
+			Code    *int   `json:"code"`
+			Status  string `json:"status"`
+			Message string `json:"message"`
+		} `json:"last_response"`
+	} `json:"hook"`
 }
 
 type PullRequestEventPayload struct {

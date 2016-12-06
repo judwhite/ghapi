@@ -25,6 +25,7 @@ type GitHubApi struct {
 	User         UserApi
 	Organization OrganizationApi
 	PullRequest  PullRequestsApi
+	Status       StatusApi
 }
 
 type IssueApi struct {
@@ -40,7 +41,10 @@ type OrganizationApi struct {
 }
 
 type PullRequestsApi struct {
-	ApiInfo
+	RepositoryInfo
+}
+
+type StatusApi struct {
 	RepositoryInfo
 }
 
@@ -59,6 +63,7 @@ func NewGitHubApi(baseUrl, owner, repository, authToken string) GitHubApi {
 	gitHubApi.User = UserApi{ApiInfo: apiInfo}
 	gitHubApi.Organization = OrganizationApi{ApiInfo: apiInfo}
 	gitHubApi.PullRequest = PullRequestsApi{RepositoryInfo: repositoryInfo}
+	gitHubApi.Status = StatusApi{RepositoryInfo: repositoryInfo}
 
 	return gitHubApi
 }
@@ -137,4 +142,8 @@ func (apiInfo *ApiInfo) httpGet(url string) (*http.Response, error) {
 
 func (apiInfo *ApiInfo) httpPatch(url, body string) (*http.Response, error) {
 	return apiInfo.doHttpRequest("PATCH", url, &body)
+}
+
+func (apiInfo *ApiInfo) httpPost(url, body string) (*http.Response, error) {
+	return apiInfo.doHttpRequest("POST", url, &body)
 }
