@@ -109,7 +109,7 @@ func TestReadRequest_FailsWhenRequestBodyIsNil(t *testing.T) {
 	_, _, err = ReadRequest(secret, req)
 	if err == nil {
 		t.Fatal("expected ErrHttpRequestBodyNil; no error returned")
-	} else if err != ErrHttpRequestBodyNil {
+	} else if err != ErrHTTPRequestBodyNil {
 		t.Fatalf("expected ErrHttpRequestBodyNil; got %v", err)
 	}
 }
@@ -217,6 +217,9 @@ func TestReadRequest_FailsWhenMACDoesntMatchExpected(t *testing.T) {
 
 	body := strings.NewReader("messageJUNKAPPENDED") // the message to be signed
 	req, err := http.NewRequest("POST", ts.URL, body)
+	if err != nil {
+		t.Fatal(err)
+	}
 	req.Header.Add("X-Hub-Signature", "sha1=2088df74d5f2146b48146caf4965377e9d0be3a4")
 	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
@@ -240,6 +243,9 @@ func TestReadRequest_FailsWhenXGithubEventHeaderNotFound(t *testing.T) {
 
 	body := strings.NewReader("message") // the message to be signed
 	req, err := http.NewRequest("POST", ts.URL, body)
+	if err != nil {
+		t.Fatal(err)
+	}
 	req.Header.Add("X-Hub-Signature", "sha1=2088df74d5f2146b48146caf4965377e9d0be3a4")
 	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
@@ -268,6 +274,9 @@ func TestReadRequest_MatchesExpected(t *testing.T) {
 
 	body := strings.NewReader("message") // the message to be signed
 	req, err := http.NewRequest("POST", ts.URL, body)
+	if err != nil {
+		t.Fatal(err)
+	}
 	req.Header.Add("X-Hub-Signature", "sha1=2088df74d5f2146b48146caf4965377e9d0be3a4")
 	req.Header.Add("X-Github-Event", "push")
 	resp, err := http.DefaultClient.Do(req)

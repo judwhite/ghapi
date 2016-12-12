@@ -1,7 +1,7 @@
 package ghapi
 
 type LabelPayload struct {
-	Url   string `json:"url"`
+	URL   string `json:"url"`
 	Name  string `json:"name"`
 	Color string `json:"color"`
 }

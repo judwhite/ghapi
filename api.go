@@ -8,78 +8,84 @@ import (
 	"strings"
 )
 
-type ApiInfo struct {
-	BaseUrl     string
+type APIInfo struct {
+	BaseURL     string
 	OAuth2Token string
 }
 
 type RepositoryInfo struct {
-	ApiInfo
+	APIInfo
 	Owner      string
 	Repository string
 }
 
-type GitHubApi struct {
-	ApiInfo
-	Issue        IssueApi
-	User         UserApi
-	Organization OrganizationApi
-	PullRequest  PullRequestsApi
-	Status       StatusApi
+type GitHubAPI struct {
+	APIInfo
+	Issue        IssueAPI
+	User         UserAPI
+	Organization OrganizationAPI
+	PullRequest  PullRequestsAPI
+	Status       StatusAPI
+	Branch       BranchesAPI
 }
 
-type IssueApi struct {
+type IssueAPI struct {
 	RepositoryInfo
 }
 
-type UserApi struct {
-	ApiInfo
+type UserAPI struct {
+	APIInfo
 }
 
-type OrganizationApi struct {
-	ApiInfo
+type OrganizationAPI struct {
+	APIInfo
 }
 
-type PullRequestsApi struct {
+type PullRequestsAPI struct {
 	RepositoryInfo
 }
 
-type StatusApi struct {
+type StatusAPI struct {
 	RepositoryInfo
 }
 
-func NewGitHubApi(baseUrl, owner, repository, authToken string) GitHubApi {
-	apiInfo := ApiInfo{BaseUrl: baseUrl, OAuth2Token: authToken}
+type BranchesAPI struct {
+	RepositoryInfo
+}
 
-	gitHubApi := GitHubApi{ApiInfo: apiInfo}
+func NewGitHubAPI(baseURL, owner, repository, authToken string) GitHubAPI {
+	apiInfo := APIInfo{BaseURL: baseURL, OAuth2Token: authToken}
+
+	gitHubAPI := GitHubAPI{APIInfo: apiInfo}
 
 	repositoryInfo := RepositoryInfo{
-		ApiInfo:    apiInfo,
+		APIInfo:    apiInfo,
 		Owner:      owner,
 		Repository: repository,
 	}
 
-	gitHubApi.Issue = IssueApi{RepositoryInfo: repositoryInfo}
-	gitHubApi.User = UserApi{ApiInfo: apiInfo}
-	gitHubApi.Organization = OrganizationApi{ApiInfo: apiInfo}
-	gitHubApi.PullRequest = PullRequestsApi{RepositoryInfo: repositoryInfo}
-	gitHubApi.Status = StatusApi{RepositoryInfo: repositoryInfo}
+	gitHubAPI.Issue = IssueAPI{RepositoryInfo: repositoryInfo}
+	gitHubAPI.User = UserAPI{APIInfo: apiInfo}
+	gitHubAPI.Organization = OrganizationAPI{APIInfo: apiInfo}
+	gitHubAPI.PullRequest = PullRequestsAPI{RepositoryInfo: repositoryInfo}
+	gitHubAPI.Status = StatusAPI{RepositoryInfo: repositoryInfo}
+	gitHubAPI.Branch = BranchesAPI{RepositoryInfo: repositoryInfo}
 
-	return gitHubApi
+	return gitHubAPI
 }
 
-func (apiInfo *ApiInfo) addBaseUrl(url string) string {
-	return apiInfo.BaseUrl + url
+func (apiInfo *APIInfo) addBaseURL(url string) string {
+	return apiInfo.BaseURL + url
 }
 
-func (apiInfo *RepositoryInfo) getUrl(url string) string {
+func (apiInfo *RepositoryInfo) getURL(url string) string {
 	url = strings.Replace(url, ":owner", apiInfo.Owner, 1)
 	url = strings.Replace(url, ":repo", apiInfo.Repository, 1)
-	url = apiInfo.BaseUrl + url
+	url = apiInfo.BaseURL + url
 	return url
 }
 
-func (apiInfo *ApiInfo) getHttpRequest(method, url string, body *string) (*http.Request, error) {
+func (apiInfo *APIInfo) getHTTPRequest(method, url string, body *string) (*http.Request, error) {
 	var bodyReader io.Reader
 	if body != nil {
 		bodyReader = strings.NewReader(*body)
@@ -97,8 +103,8 @@ func (apiInfo *ApiInfo) getHttpRequest(method, url string, body *string) (*http.
 	return req, nil
 }
 
-func (apiInfo *ApiInfo) doHttpRequest(method, url string, body *string) (*http.Response, error) {
-	req, err := apiInfo.getHttpRequest(method, url, body)
+func (apiInfo *APIInfo) doHTTPRequest(method, url string, body *string) (*http.Response, error) {
+	req, err := apiInfo.getHTTPRequest(method, url, body)
 	if err != nil {
 		return nil, err
 	}
@@ -118,11 +124,11 @@ func (apiInfo *ApiInfo) doHttpRequest(method, url string, body *string) (*http.R
 		if body != nil {
 			requestBody = *body
 		}
-		err = &ErrHttpError{
+		err = &ErrHTTPError{
 			Status:       resp.Status,
 			StatusCode:   resp.StatusCode,
 			Method:       method,
-			Url:          url,
+			URL:          url,
 			RequestBody:  requestBody,
 			ResponseBody: responseBody,
 		}
@@ -132,18 +138,18 @@ func (apiInfo *ApiInfo) doHttpRequest(method, url string, body *string) (*http.R
 	return resp, nil
 }
 
-func (apiInfo *ApiInfo) httpDelete(url string) (*http.Response, error) {
-	return apiInfo.doHttpRequest("DELETE", url, nil)
+func (apiInfo *APIInfo) httpDelete(url string) (*http.Response, error) {
+	return apiInfo.doHTTPRequest("DELETE", url, nil)
 }
 
-func (apiInfo *ApiInfo) httpGet(url string) (*http.Response, error) {
-	return apiInfo.doHttpRequest("GET", url, nil)
+func (apiInfo *APIInfo) httpGet(url string) (*http.Response, error) {
+	return apiInfo.doHTTPRequest("GET", url, nil)
 }
 
-func (apiInfo *ApiInfo) httpPatch(url, body string) (*http.Response, error) {
-	return apiInfo.doHttpRequest("PATCH", url, &body)
+func (apiInfo *APIInfo) httpPatch(url, body string) (*http.Response, error) {
+	return apiInfo.doHTTPRequest("PATCH", url, &body)
 }
 
-func (apiInfo *ApiInfo) httpPost(url, body string) (*http.Response, error) {
-	return apiInfo.doHttpRequest("POST", url, &body)
+func (apiInfo *APIInfo) httpPost(url, body string) (*http.Response, error) {
+	return apiInfo.doHTTPRequest("POST", url, &body)
 }

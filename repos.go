@@ -29,9 +29,9 @@ func (ct *CustomTime) UnmarshalJSON(b []byte) error {
 	return nil
 }
 
-// The repository which the event occurred on.
+// RepositoryPayload contains information about the repository
 type RepositoryPayload struct {
-	Id int `json:"id"`
+	ID int `json:"id"`
 	// The short name of the repository.
 	Name string `json:"name"`
 	// The name of the repository including the owner (user/organization).
@@ -39,51 +39,51 @@ type RepositoryPayload struct {
 	// TODO: What if the owner is an organization? Owner.Type field?
 	Owner            User       `json:"owner"`
 	Private          bool       `json:"private"`
-	HtmlUrl          string     `json:"html_url"`
+	HTMLURL          string     `json:"html_url"`
 	Fork             bool       `json:"fork"`
-	Url              string     `json:"url"`
-	ForksUrl         string     `json:"forks_url"`
-	KeysUrl          string     `json:"keys"`
-	CollaboratorsUrl string     `json:"collaborators_url"`
-	TeamsUrl         string     `json:"teams_url"`
-	HooksUrl         string     `json:"hooks_url"`
-	IssueEventsUrl   string     `json:"issue_events_url"`
-	EventUrl         string     `json:"events_url"`
-	AssigneesUrl     string     `json:"assignees_url"`
-	BranchesUrl      string     `json:"branches_url"`
-	TagsUrl          string     `json:"tags_url"`
-	BlobsUrl         string     `json:"blobs_url"`
-	GitTagsUrl       string     `json:"git_tags_url"`
-	GitRefsUrl       string     `json:"git_refs_url"`
-	TreesUrl         string     `json:"trees_url"`
-	StatusesUrl      string     `json:"statuses_url"`
-	LanguagesUrl     string     `json:"languages_url"`
-	StargazersUrl    string     `json:"stargazers_url"`
-	ContributorsUrl  string     `json:"contributors_url"`
-	SubscribersUrl   string     `json:"subscribers_url"`
-	SubscriptionUrl  string     `json:"subscription_url"`
-	CommitsUrl       string     `json:"commits_url"`
-	GitCommitsUrl    string     `json:"git_commits_url"`
-	CommentsUrl      string     `json:"comments_url"`
-	IssueCommentUrl  string     `json:"issue_comment_url"`
-	ContentsUrl      string     `json:"contents_url"`
-	CompareUrl       string     `json:"compare_url"`
-	MergesUrl        string     `json:"merges_url"`
-	ArchiveUrl       string     `json:"archive_url"`
-	DownloadsUrl     string     `json:"downloads_url"`
-	IssuesUrl        string     `json:"issues_url"`
-	PullsUrl         string     `json:"pulls_url"`
-	MilestonesUrl    string     `json:"milestones_url"`
-	NotificationsUrl string     `json:"notifications_url"`
-	LabelsUrl        string     `json:"labels_url"`
-	ReleasesUrl      string     `json:"releases_url"`
+	URL              string     `json:"url"`
+	ForksURL         string     `json:"forks_url"`
+	KeysURL          string     `json:"keys"`
+	CollaboratorsURL string     `json:"collaborators_url"`
+	TeamsURL         string     `json:"teams_url"`
+	HooksURL         string     `json:"hooks_url"`
+	IssueEventsURL   string     `json:"issue_events_url"`
+	EventURL         string     `json:"events_url"`
+	AssigneesURL     string     `json:"assignees_url"`
+	BranchesURL      string     `json:"branches_url"`
+	TagsURL          string     `json:"tags_url"`
+	BlobsURL         string     `json:"blobs_url"`
+	GitTagsURL       string     `json:"git_tags_url"`
+	GitRefsURL       string     `json:"git_refs_url"`
+	TreesURL         string     `json:"trees_url"`
+	StatusesURL      string     `json:"statuses_url"`
+	LanguagesURL     string     `json:"languages_url"`
+	StargazersURL    string     `json:"stargazers_url"`
+	ContributorsURL  string     `json:"contributors_url"`
+	SubscribersURL   string     `json:"subscribers_url"`
+	SubscriptionURL  string     `json:"subscription_url"`
+	CommitsURL       string     `json:"commits_url"`
+	GitCommitsURL    string     `json:"git_commits_url"`
+	CommentsURL      string     `json:"comments_url"`
+	IssueCommentURL  string     `json:"issue_comment_url"`
+	ContentsURL      string     `json:"contents_url"`
+	CompareURL       string     `json:"compare_url"`
+	MergesURL        string     `json:"merges_url"`
+	ArchiveURL       string     `json:"archive_url"`
+	DownloadsURL     string     `json:"downloads_url"`
+	IssuesURL        string     `json:"issues_url"`
+	PullsURL         string     `json:"pulls_url"`
+	MilestonesURL    string     `json:"milestones_url"`
+	NotificationsURL string     `json:"notifications_url"`
+	LabelsURL        string     `json:"labels_url"`
+	ReleasesURL      string     `json:"releases_url"`
 	CreatedAt        CustomTime `json:"created_at"`
 	UpdatedAt        CustomTime `json:"updated_at"`
 	PushedAt         CustomTime `json:"pushed_at"`
-	GitUrl           string     `json:"git_url"`
-	SshUrl           string     `json:"ssh_url"`
-	CloneUrl         string     `json:"clone_url"`
-	SvnUrl           string     `json:"svn_url"`
+	GitURL           string     `json:"git_url"`
+	SSHURL           string     `json:"ssh_url"`
+	CloneURL         string     `json:"clone_url"`
+	SVNURL           string     `json:"svn_url"`
 	// TODO: can be null
 	HomePage        string `json:"homepage"`
 	Size            int    `json:"size"`
@@ -97,7 +97,7 @@ type RepositoryPayload struct {
 	HasPages     bool   `json:"has_pages"`
 	ForksCount   int    `json:"forks_count"`
 	// TODO: can be null
-	MirrorUrl       string `json:"mirror_url"`
+	MirrorURL       string `json:"mirror_url"`
 	OpenIssuesCount int    `json:"open_issues_count"`
 	Forks           int    `json:"forks"`
 	OpenIssues      int    `json:"open_issues"`

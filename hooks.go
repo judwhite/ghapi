@@ -20,7 +20,7 @@ func ReadRequest(secret []byte, r *http.Request) (GitHubEventType, []byte, error
 	}
 
 	if r.Body == nil {
-		return "", nil, ErrHttpRequestBodyNil
+		return "", nil, ErrHTTPRequestBodyNil
 	}
 
 	if body, err = ioutil.ReadAll(r.Body); err != nil {
@@ -60,15 +60,17 @@ func getSignature(r *http.Request) (string, error) {
 }
 
 func getMAC(r *http.Request) ([]byte, error) {
-	if sig, err := getSignature(r); err != nil {
+	sig, err := getSignature(r)
+	if err != nil {
 		return nil, err
-	} else {
-		if messageMAC, err := hex.DecodeString(sig); err != nil {
-			return nil, err
-		} else {
-			return messageMAC, nil
-		}
 	}
+
+	messageMAC, err := hex.DecodeString(sig)
+	if err != nil {
+		return nil, err
+	}
+
+	return messageMAC, nil
 }
 
 func checkMAC(mac hash.Hash, message, messageMAC []byte) bool {

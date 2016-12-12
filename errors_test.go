@@ -3,11 +3,11 @@ package ghapi
 import "testing"
 
 func TestErrHttpError_Error(t *testing.T) {
-	e := ErrHttpError{
+	e := ErrHTTPError{
 		Status:       "404 Not Found",
 		StatusCode:   404,
 		Method:       "POST",
-		Url:          "http://example.org",
+		URL:          "http://example.org",
 		RequestBody:  "{ id: \"1\" }",
 		ResponseBody: "{ message: \"not found\" }",
 	}

@@ -7,12 +7,12 @@ import (
 )
 
 type IssuePayload struct {
-	Url         string                   `json:"url"`
-	LabelsUrl   string                   `json:"labels_url"`
-	CommentsUrl string                   `json:"comments_url"`
-	EventsUrl   string                   `json:"events_url"`
-	HtmlUrl     string                   `json:"html_url"`
-	Id          int                      `json:"id"`
+	URL         string                   `json:"url"`
+	LabelsURL   string                   `json:"labels_url"`
+	CommentsURL string                   `json:"comments_url"`
+	EventsURL   string                   `json:"events_url"`
+	HTMLURL     string                   `json:"html_url"`
+	ID          int                      `json:"id"`
 	Number      int                      `json:"number"`
 	Title       string                   `json:"title"`
 	User        User                     `json:"user"`
@@ -31,29 +31,29 @@ type IssuePayload struct {
 }
 
 type IssuePullRequestPayload struct {
-	Url      string `json:"url"`
-	HtmlUrl  string `json:"html_url"`
-	DiffUrl  string `json:"diff_url"`
-	PatchUrl string `json:"patch_url"`
+	URL      string `json:"url"`
+	HTMLURL  string `json:"html_url"`
+	DiffURL  string `json:"diff_url"`
+	PatchURL string `json:"patch_url"`
 }
 
 type IssueCommentPayload struct {
-	Url       string    `json:"url"`
-	HtmlUrl   string    `json:"html_url"`
-	IssueUrl  string    `json:"issue_url"`
-	Id        int       `json:"id"`
+	URL       string    `json:"url"`
+	HTMLURL   string    `json:"html_url"`
+	IssueURL  string    `json:"issue_url"`
+	ID        int       `json:"id"`
 	User      User      `json:"user"`
 	CreatedAt time.Time `json:"created_at"`
 	UpdatedAt time.Time `json:"updated_at"`
 	Body      string    `json:"body"`
 }
 
-func (api *IssueApi) DeleteIssueComment(commentId int) error {
-	url := api.getUrl("/repos/:owner/:repo/issues/comments/" + strconv.Itoa(commentId))
-	return api.DeleteIssueCommentByUrl(url)
+func (api *IssueAPI) DeleteIssueComment(commentID int) error {
+	url := api.getURL("/repos/:owner/:repo/issues/comments/" + strconv.Itoa(commentID))
+	return api.DeleteIssueCommentByURL(url)
 }
 
-func (api *IssueApi) DeleteIssueCommentByUrl(url string) error {
+func (api *IssueAPI) DeleteIssueCommentByURL(url string) error {
 	resp, err := api.httpDelete(url)
 	if err != nil {
 		return err
@@ -63,8 +63,8 @@ func (api *IssueApi) DeleteIssueCommentByUrl(url string) error {
 	return nil
 }
 
-func (api *IssueApi) GetIssueComment(commentId int) (*IssueCommentPayload, error) {
-	url := api.getUrl("/repos/:owner/:repo/issues/comments/" + strconv.Itoa(commentId))
+func (api *IssueAPI) GetIssueComment(commentID int) (*IssueCommentPayload, error) {
+	url := api.getURL("/repos/:owner/:repo/issues/comments/" + strconv.Itoa(commentID))
 
 	resp, err := api.httpGet(url)
 	if err != nil {
@@ -82,12 +82,12 @@ func (api *IssueApi) GetIssueComment(commentId int) (*IssueCommentPayload, error
 	return issueComment, nil
 }
 
-func (api *IssueApi) GetIssue(issueNumber int) (*IssuePayload, error) {
-	url := api.getUrl("/repos/:owner/:repo/issues/" + strconv.Itoa(issueNumber))
-	return api.GetIssueByUrl(url)
+func (api *IssueAPI) GetIssue(issueNumber int) (*IssuePayload, error) {
+	url := api.getURL("/repos/:owner/:repo/issues/" + strconv.Itoa(issueNumber))
+	return api.GetIssueByURL(url)
 }
 
-func (api *IssueApi) GetIssueByUrl(url string) (*IssuePayload, error) {
+func (api *IssueAPI) GetIssueByURL(url string) (*IssuePayload, error) {
 	resp, err := api.httpGet(url)
 	if err != nil {
 		return nil, err
@@ -104,20 +104,74 @@ func (api *IssueApi) GetIssueByUrl(url string) (*IssuePayload, error) {
 	return issue, nil
 }
 
-func (api *IssueApi) UpdateIssueAssignee(issueNumber int, assignee string) (*IssuePayload, error) {
-	url := api.getUrl("/repos/:owner/:repo/issues/" + strconv.Itoa(issueNumber))
-	return api.UpdateIssueAssigneeByUrl(url, assignee)
+func (api *IssueAPI) UpdateIssueAssignee(issueNumber int, assignee string) (*IssuePayload, error) {
+	url := api.getURL("/repos/:owner/:repo/issues/" + strconv.Itoa(issueNumber))
+	return api.UpdateIssueAssigneeByURL(url, assignee)
 }
 
-func (api *IssueApi) UpdateIssueAssigneeByUrl(url, assignee string) (*IssuePayload, error) {
+func (api *IssueAPI) UpdateIssueAssigneeByURL(url, assignee string) (*IssuePayload, error) {
 	body := struct {
 		Assignee string `json:"assignee"`
 	}{assignee}
 
-	return api.updateIssueByUrl(url, body)
+	return api.updateIssueByURL(url, body)
 }
 
-func (api *IssueApi) updateIssueByUrl(url string, body interface{}) (*IssuePayload, error) {
+func (api *IssueAPI) UpdateIssueLabels(issueNumber int, labels []string) (*IssuePayload, error) {
+	url := api.getURL("/repos/:owner/:repo/issues/" + strconv.Itoa(issueNumber))
+	return api.UpdateIssueLabelsByURL(url, labels)
+}
+
+func (api *IssueAPI) UpdateIssueLabelsByURL(url string, labels []string) (*IssuePayload, error) {
+	body := struct {
+		Labels []string `json:"labels"`
+	}{labels}
+
+	return api.updateIssueByURL(url, body)
+}
+
+func (api *IssueAPI) AddLabel(issueNumber int, labelName string) error {
+	issue, err := api.GetIssue(issueNumber)
+	if err != nil {
+		return err
+	}
+	var labels []string
+	for _, existingLabel := range issue.Labels {
+		if existingLabel.Name == labelName {
+			return nil
+		}
+		labels = append(labels, existingLabel.Name)
+	}
+
+	labels = append(labels, labelName)
+	_, err = api.UpdateIssueLabels(issueNumber, labels)
+	return err
+}
+
+func (api *IssueAPI) RemoveLabel(issueNumber int, labelName string) error {
+	issue, err := api.GetIssue(issueNumber)
+	if err != nil {
+		return err
+	}
+	var labels []string
+	var hasLabel bool
+	for _, existingLabel := range issue.Labels {
+		if existingLabel.Name == labelName {
+			hasLabel = true
+		} else {
+			labels = append(labels, existingLabel.Name)
+		}
+	}
+
+	if !hasLabel {
+		return nil
+	}
+
+	_, err = api.UpdateIssueLabels(issueNumber, labels)
+	return err
+}
+
+func (api *IssueAPI) updateIssueByURL(url string, body interface{}) (*IssuePayload, error) {
 	b, err := json.Marshal(body)
 	if err != nil {
 		return nil, err

@@ -2,6 +2,7 @@ package ghapi
 
 import (
 	"encoding/json"
+	"fmt"
 	"strconv"
 	"time"
 )
@@ -319,9 +320,9 @@ type PullRequestPayload struct {
 		} `json:"statuses"`
 	} `json:"_links"`
 	Merged         bool   `json:"merged"`
-	Mergeable      bool   `json:"mergeable"`
+	Mergeable      *bool  `json:"mergeable"`
 	MergeableState string `json:"mergeable_state"`
-	MergedBy       User   `json:"merged_by"`
+	MergedBy       *User  `json:"merged_by"`
 	Comments       int    `json:"comments"`
 	ReviewComments int    `json:"review_comments"`
 	Commits        int    `json:"commits"`
@@ -330,14 +331,47 @@ type PullRequestPayload struct {
 	ChangedFiles   int    `json:"changed_files"`
 }
 
+type Commit struct {
+	SHA    string `json:"sha"`
+	Commit struct {
+		Author struct {
+			Name  string    `json:"name"`
+			Email string    `json:"email"`
+			Date  time.Time `json:"date"`
+		} `json:"author"`
+		Committer struct {
+			Name  string    `json:"name"`
+			Email string    `json:"email"`
+			Date  time.Time `json:"date"`
+		} `json:"committer"`
+		Message string `json:"message"`
+		Tree    struct {
+			SHA string `json:"sha"`
+			URL string `json:"url"`
+		} `json:"tree"`
+		URL          string `json:"url"`
+		CommentCount int    `json:"comment_count"`
+	} `json:"commit"`
+	URL         string `json:"url"`
+	HTMLURL     string `json:"html_url"`
+	CommentsURL string `json:"comments_url"`
+	Author      User   `json:"author"`
+	Committer   User   `json:"committer"`
+	Parents     []struct {
+		SHA     string `json:"sha"`
+		URL     string `json:"url"`
+		HTMLURL string `json:"html_url"`
+	} `json:"parents"`
+}
+
 /*func (p *PullRequestsApi) ListPullRequests(owner, repo string) ([]PullRequestPayload, error) {
 	// TODO
 	_ = p.getUrl("/repos/:owner/:repo/pulls")
 	return nil, nil
 }*/
 
-func (api *PullRequestsApi) GetPullRequest(pullRequestNumber int) (*PullRequestPayload, error) {
-	url := api.getUrl("/repos/:owner/:repo/pulls/" + strconv.Itoa(pullRequestNumber))
+func (api *PullRequestsAPI) GetPullRequest(pullRequestNumber int) (*PullRequestPayload, error) {
+	url := api.getURL("/repos/:owner/:repo/pulls/" + strconv.Itoa(pullRequestNumber))
 
 	resp, err := api.httpGet(url)
 	if err != nil {
@@ -353,4 +387,32 @@ func (api *PullRequestsApi) GetPullRequest(pullRequestNumber int) (*PullRequestP
 	}
 
 	return pullRequest, nil
+}
+
+func (api *PullRequestsAPI) GetCommits(pullRequestNumber int) ([]Commit, error) {
+	var allCommits []Commit
+	for page := 1; ; page++ {
+		url := api.getURL(fmt.Sprintf("/repos/:owner/:repo/pulls/%d/commits?page=%d", pullRequestNumber, page))
+
+		resp, err := api.httpGet(url)
+		//resp.Header["Link"] // TODO (judwhite), get next page until last
+		//<url>; rel="last", <url>; rel="first", <url>; rel="prev", <url>; rel="next"
+		if err != nil {
+			return nil, err
+		}
+
+		commits := make([]Commit, 0)
+		if err = json.NewDecoder(resp.Body).Decode(&commits); err != nil {
+			resp.Body.Close()
+			return nil, err
+		}
+		resp.Body.Close()
+
+		allCommits = append(allCommits, commits...)
+		if len(commits) == 0 || resp.Header.Get("Link") == "" {
+			break
+		}
+	}
+
+	return allCommits, nil
 }

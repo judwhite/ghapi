@@ -6,7 +6,7 @@ import (
 	"testing"
 )
 
-const get_user_octocat_response string = `{
+const getUserOctocatResponse string = `{
   "login": "octocat",
   "id": 1,
   "avatar_url": "https://github.com/images/error/octocat_happy.gif",
@@ -39,7 +39,7 @@ const get_user_octocat_response string = `{
   "updated_at": "2008-01-14T04:33:35Z"
 }`
 
-const get_user_octocat_organizations_response string = `[
+const getUserOctocatOrganizationsResponse string = `[
   {
     "login": "github",
     "id": 1,
@@ -50,13 +50,13 @@ const get_user_octocat_organizations_response string = `[
 ]`
 
 func TestUserApi_GetUser(t *testing.T) {
-	ts, api, signal := makeGitHubApiTestServer(func(w http.ResponseWriter, r *http.Request) {
+	ts, api, signal := makeGitHubAPITestServer(func(w http.ResponseWriter, r *http.Request) {
 		if r.URL != nil && r.URL.Path == "/users/octocat" {
 			b, err := ioutil.ReadAll(r.Body)
 
 			expectNil(t, err, "err")
 
-			_, err = w.Write([]byte(get_user_octocat_response))
+			_, err = w.Write([]byte(getUserOctocatResponse))
 
 			expectNil(t, err, "err")
 			expect(t, "GET", r.Method, "r.Method")
@@ -75,20 +75,20 @@ func TestUserApi_GetUser(t *testing.T) {
 	}
 
 	expect(t, "octocat", u.Login, "u.Login")
-	expect(t, 1, u.Id, "u.Id")
-	expect(t, "https://github.com/images/error/octocat_happy.gif", u.AvatarUrl, "u.AvatarUrl")
-	expect(t, "", u.GravatarId, "u.GravatarId")
-	expect(t, "https://api.github.com/users/octocat", u.Url, "u.Url")
-	expect(t, "https://github.com/octocat", u.HtmlUrl, "u.HtmlUrl")
-	expect(t, "https://api.github.com/users/octocat/followers", u.FollowersUrl, "u.FollowersUrl")
-	expect(t, "https://api.github.com/users/octocat/following{/other_user}", u.FollowingUrl, "u.FollowingUrl")
-	expect(t, "https://api.github.com/users/octocat/gists{/gist_id}", u.GistsUrl, "u.GistsUrl")
-	expect(t, "https://api.github.com/users/octocat/starred{/owner}{/repo}", u.StarredUrl, "u.StarredUrl")
-	expect(t, "https://api.github.com/users/octocat/subscriptions", u.SubscriptionsUrl, "u.SubscriptionsUrl")
-	expect(t, "https://api.github.com/users/octocat/orgs", u.OrganizationsUrl, "u.OrganizationsUrl")
-	expect(t, "https://api.github.com/users/octocat/repos", u.ReposUrl, "u.ReposUrl")
-	expect(t, "https://api.github.com/users/octocat/events{/privacy}", u.EventsUrl, "u.EventsUrl")
-	expect(t, "https://api.github.com/users/octocat/received_events", u.ReceivedEventsUrl, "u.ReceivedEventsUrl")
+	expect(t, 1, u.ID, "u.Id")
+	expect(t, "https://github.com/images/error/octocat_happy.gif", u.AvatarURL, "u.AvatarUrl")
+	expect(t, "", u.GravatarID, "u.GravatarId")
+	expect(t, "https://api.github.com/users/octocat", u.URL, "u.Url")
+	expect(t, "https://github.com/octocat", u.HTMLURL, "u.HtmlUrl")
+	expect(t, "https://api.github.com/users/octocat/followers", u.FollowersURL, "u.FollowersUrl")
+	expect(t, "https://api.github.com/users/octocat/following{/other_user}", u.FollowingURL, "u.FollowingUrl")
+	expect(t, "https://api.github.com/users/octocat/gists{/gist_id}", u.GistsURL, "u.GistsUrl")
+	expect(t, "https://api.github.com/users/octocat/starred{/owner}{/repo}", u.StarredURL, "u.StarredUrl")
+	expect(t, "https://api.github.com/users/octocat/subscriptions", u.SubscriptionsURL, "u.SubscriptionsUrl")
+	expect(t, "https://api.github.com/users/octocat/orgs", u.OrganizationsURL, "u.OrganizationsUrl")
+	expect(t, "https://api.github.com/users/octocat/repos", u.ReposURL, "u.ReposUrl")
+	expect(t, "https://api.github.com/users/octocat/events{/privacy}", u.EventsURL, "u.EventsUrl")
+	expect(t, "https://api.github.com/users/octocat/received_events", u.ReceivedEventsURL, "u.ReceivedEventsUrl")
 	expect(t, "User", u.Type, "u.Type")
 	expect(t, false, u.SiteAdmin, "u.SiteAdmin")
 
@@ -108,7 +108,7 @@ func TestUserApi_GetUser(t *testing.T) {
 }
 
 func TestUserApi_GetUser_ReturnsErrOnHttpErr(t *testing.T) {
-	ts, api, signal := makeGitHubApiTestServer(func(w http.ResponseWriter, r *http.Request) {
+	ts, api, signal := makeGitHubAPITestServer(func(w http.ResponseWriter, r *http.Request) {
 		if r.URL != nil && r.URL.Path == "/users/octocat" {
 			w.WriteHeader(500)
 		} else {
@@ -121,13 +121,13 @@ func TestUserApi_GetUser_ReturnsErrOnHttpErr(t *testing.T) {
 	waitSignal(t, signal)
 
 	expectNil(t, u, "u")
-	expectErrHttpError500(t, err)
+	expectErrHTTPError500(t, err)
 }
 
 func TestUserApi_GetUser_ReturnsErrOnJsonDecodeErr(t *testing.T) {
-	ts, api, signal := makeGitHubApiTestServer(func(w http.ResponseWriter, r *http.Request) {
+	ts, api, signal := makeGitHubAPITestServer(func(w http.ResponseWriter, r *http.Request) {
 		if r.URL != nil && r.URL.Path == "/users/octocat" {
-			_, err := w.Write([]byte("junk" + get_user_octocat_organizations_response))
+			_, err := w.Write([]byte("junk" + getUserOctocatOrganizationsResponse))
 
 			expectNil(t, err, "err")
 		} else {
@@ -140,17 +140,17 @@ func TestUserApi_GetUser_ReturnsErrOnJsonDecodeErr(t *testing.T) {
 	waitSignal(t, signal)
 
 	expectNil(t, u, "u")
-	expectJsonSyntaxError(t, err, "invalid character 'j' looking for beginning of value")
+	expectJSONSyntaxError(t, err, "invalid character 'j' looking for beginning of value")
 }
 
 func TestUserApi_GetOrganizations(t *testing.T) {
-	ts, api, signal := makeGitHubApiTestServer(func(w http.ResponseWriter, r *http.Request) {
+	ts, api, signal := makeGitHubAPITestServer(func(w http.ResponseWriter, r *http.Request) {
 		if r.URL != nil && r.URL.Path == "/users/octocat/orgs" {
 			b, err := ioutil.ReadAll(r.Body)
 
 			expectNil(t, err, "err")
 
-			_, err = w.Write([]byte(get_user_octocat_organizations_response))
+			_, err = w.Write([]byte(getUserOctocatOrganizationsResponse))
 
 			expectNil(t, err, "err")
 			expect(t, "GET", r.Method, "r.Method")
@@ -172,14 +172,14 @@ func TestUserApi_GetOrganizations(t *testing.T) {
 	expect(t, 1, len(orgs), "len(orgs)")
 	org := orgs[0]
 	expect(t, "github", org.Login, "org.Login")
-	expect(t, 1, org.Id, "org.Id")
-	expect(t, "https://api.github.com/orgs/github", org.Url, "org.Url")
-	expect(t, "https://github.com/images/error/octocat_happy.gif", org.AvatarUrl, "org.AvatarUrl")
+	expect(t, 1, org.ID, "org.Id")
+	expect(t, "https://api.github.com/orgs/github", org.URL, "org.Url")
+	expect(t, "https://github.com/images/error/octocat_happy.gif", org.AvatarURL, "org.AvatarUrl")
 	expect(t, "A great organization", org.Description, "org.Description")
 }
 
 func TestUserApi_GetOrganizations_ReturnsErrOnHttpErr(t *testing.T) {
-	ts, api, signal := makeGitHubApiTestServer(func(w http.ResponseWriter, r *http.Request) {
+	ts, api, signal := makeGitHubAPITestServer(func(w http.ResponseWriter, r *http.Request) {
 		if r.URL != nil && r.URL.Path == "/users/octocat/orgs" {
 			w.WriteHeader(500)
 		} else {
@@ -192,13 +192,13 @@ func TestUserApi_GetOrganizations_ReturnsErrOnHttpErr(t *testing.T) {
 	waitSignal(t, signal)
 
 	expectNil(t, u, "u")
-	expectErrHttpError500(t, err)
+	expectErrHTTPError500(t, err)
 }
 
 func TestUserApi_GetOrganizations_ReturnsErrOnJsonDecodeErr(t *testing.T) {
-	ts, api, signal := makeGitHubApiTestServer(func(w http.ResponseWriter, r *http.Request) {
+	ts, api, signal := makeGitHubAPITestServer(func(w http.ResponseWriter, r *http.Request) {
 		if r.URL != nil && r.URL.Path == "/users/octocat/orgs" {
-			_, err := w.Write([]byte("junk" + get_user_octocat_organizations_response))
+			_, err := w.Write([]byte("junk" + getUserOctocatOrganizationsResponse))
 
 			expectNil(t, err, "err")
 		} else {
@@ -211,5 +211,5 @@ func TestUserApi_GetOrganizations_ReturnsErrOnJsonDecodeErr(t *testing.T) {
 	waitSignal(t, signal)
 
 	expectNil(t, u, "u")
-	expectJsonSyntaxError(t, err, "invalid character 'j' looking for beginning of value")
+	expectJSONSyntaxError(t, err, "invalid character 'j' looking for beginning of value")
 }

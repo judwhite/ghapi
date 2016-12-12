@@ -2,18 +2,18 @@ package ghapi
 
 import "time"
 
-// The organization which the event occurred on.
+// OrganizationPayload contains information about the Organization
 type OrganizationPayload struct {
 	UserOrganizationPayload
-	ReposUrl          string                   `json:"repos_url"`
-	EventsUrl         string                   `json:"events_url"`
-	MembersUrl        string                   `json:"members_url"`
-	PublicMembersUrl  string                   `json:"public_members_url"`
+	ReposURL          string                   `json:"repos_url"`
+	EventsURL         string                   `json:"events_url"`
+	MembersURL        string                   `json:"members_url"`
+	PublicMembersURL  string                   `json:"public_members_url"`
 	PublicRepos       int                      `json:"public_repos"`
 	PublicGists       int                      `json:"public_gists"`
 	Followers         int                      `json:"followers"`
 	Following         int                      `json:"following"`
-	HtmlUrl           string                   `json:"html_url"`
+	HTMLURL           string                   `json:"html_url"`
 	CreatedAt         time.Time                `json:"created_at"`
 	UpdatedAt         time.Time                `json:"updated_at"`
 	Type              string                   `json:"type"`
@@ -28,9 +28,9 @@ type OrganizationPayload struct {
 
 type UserOrganizationPayload struct {
 	Login       string `json:"login"`
-	Id          int    `json:"id"`
-	Url         string `json:"url"`
-	AvatarUrl   string `json:"avatar_url"`
+	ID          int    `json:"id"`
+	URL         string `json:"url"`
+	AvatarURL   string `json:"avatar_url"`
 	Description string `json:"description"`
 }
 

@@ -5,10 +5,10 @@ import (
 )
 
 type MilestonePayload struct {
-	Url          string     `json:"url"`
-	HtmlUrl      string     `json:"html_url"`
-	LabelsUrl    string     `json:"labels_url"`
-	Id           int        `json:"id"`
+	URL          string     `json:"url"`
+	HTMLURL      string     `json:"html_url"`
+	LabelsURL    string     `json:"labels_url"`
+	ID           int        `json:"id"`
 	Number       int        `json:"number"`
 	State        string     `json:"state"`
 	Title        string     `json:"title"`

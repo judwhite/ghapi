@@ -37,8 +37,8 @@ type CombinedStatusPayload struct {
 	URL        string            `json:"url"`
 }
 
-func (api *StatusApi) SetStatus(sha string, state StatusState, targetURL, description, context string) (*StatusPayload, error) {
-	url := api.getUrl("/repos/:owner/:repo/statuses/") + sha
+func (api *StatusAPI) SetStatus(sha string, state StatusState, targetURL, description, context string) (*StatusPayload, error) {
+	url := api.getURL("/repos/:owner/:repo/statuses/") + sha
 
 	body := struct {
 		State       string `json:"state"`
@@ -73,8 +73,8 @@ func (api *StatusApi) SetStatus(sha string, state StatusState, targetURL, descri
 	return &status, nil
 }
 
-func (api *StatusApi) GetList(ref string) ([]StatusPayload, error) {
-	url := api.getUrl(fmt.Sprintf("/repos/:owner/:repo/commits/%s/statuses", ref))
+func (api *StatusAPI) GetList(ref string) ([]StatusPayload, error) {
+	url := api.getURL(fmt.Sprintf("/repos/:owner/:repo/commits/%s/statuses", ref))
 
 	resp, err := api.httpGet(url)
 	if err != nil {
@@ -92,8 +92,8 @@ func (api *StatusApi) GetList(ref string) ([]StatusPayload, error) {
 	return statuses, nil
 }
 
-func (api *StatusApi) GetCombined(ref string) (*CombinedStatusPayload, error) {
-	url := api.getUrl(fmt.Sprintf("/repos/:owner/:repo/commits/%s/status", ref))
+func (api *StatusAPI) GetCombined(ref string) (*CombinedStatusPayload, error) {
+	url := api.getURL(fmt.Sprintf("/repos/:owner/:repo/commits/%s/status", ref))
 
 	resp, err := api.httpGet(url)
 	if err != nil {
