@@ -153,7 +153,7 @@ func (api *IssueAPI) RemoveLabel(issueNumber int, labelName string) error {
 	if err != nil {
 		return err
 	}
-	var labels []string
+	labels := []string{}
 	var hasLabel bool
 	for _, existingLabel := range issue.Labels {
 		if existingLabel.Name == labelName {

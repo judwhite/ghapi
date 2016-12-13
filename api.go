@@ -27,6 +27,7 @@ type GitHubAPI struct {
 	PullRequest  PullRequestsAPI
 	Status       StatusAPI
 	Branch       BranchesAPI
+	Repository   RepositoryAPI
 }
 
 type IssueAPI struct {
@@ -53,6 +54,10 @@ type BranchesAPI struct {
 	RepositoryInfo
 }
 
+type RepositoryAPI struct {
+	RepositoryInfo
+}
+
 func NewGitHubAPI(baseURL, owner, repository, authToken string) GitHubAPI {
 	apiInfo := APIInfo{BaseURL: baseURL, OAuth2Token: authToken}
 
@@ -70,6 +75,7 @@ func NewGitHubAPI(baseURL, owner, repository, authToken string) GitHubAPI {
 	gitHubAPI.PullRequest = PullRequestsAPI{RepositoryInfo: repositoryInfo}
 	gitHubAPI.Status = StatusAPI{RepositoryInfo: repositoryInfo}
 	gitHubAPI.Branch = BranchesAPI{RepositoryInfo: repositoryInfo}
+	gitHubAPI.Repository = RepositoryAPI{RepositoryInfo: repositoryInfo}
 
 	return gitHubAPI
 }

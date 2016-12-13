@@ -49,14 +49,14 @@ type PullRequestPayload struct {
 		ReceivedEventsURL string `json:"received_events_url"`
 		Type              string `json:"type"`
 		SiteAdmin         bool   `json:"site_admin"`
-		LdapDn            string `json:"ldap_dn"`
+		LDAPDN            string `json:"ldap_dn"`
 	} `json:"user"`
 	Body              string            `json:"body"`
 	CreatedAt         time.Time         `json:"created_at"`
 	UpdatedAt         time.Time         `json:"updated_at"`
 	ClosedAt          *time.Time        `json:"closed_at"`
 	MergedAt          *time.Time        `json:"merged_at"`
-	MergeCommitSha    string            `json:"merge_commit_sha"`
+	MergeCommitSHA    string            `json:"merge_commit_sha"`
 	Assignee          *User             `json:"assignee"`
 	Assignees         []User            `json:"assignees"`
 	Milestone         *MilestonePayload `json:"milestone"`
@@ -68,7 +68,7 @@ type PullRequestPayload struct {
 	Head              struct {
 		Label string `json:"label"`
 		Ref   string `json:"ref"`
-		Sha   string `json:"sha"`
+		SHA   string `json:"sha"`
 		User  struct {
 			Login             string `json:"login"`
 			ID                int    `json:"id"`
@@ -87,7 +87,7 @@ type PullRequestPayload struct {
 			ReceivedEventsURL string `json:"received_events_url"`
 			Type              string `json:"type"`
 			SiteAdmin         bool   `json:"site_admin"`
-			LdapDn            string `json:"ldap_dn"`
+			LDAPDN            string `json:"ldap_dn"`
 		} `json:"user"`
 		Repo struct {
 			ID       int    `json:"id"`
@@ -111,7 +111,7 @@ type PullRequestPayload struct {
 				ReceivedEventsURL string `json:"received_events_url"`
 				Type              string `json:"type"`
 				SiteAdmin         bool   `json:"site_admin"`
-				LdapDn            string `json:"ldap_dn"`
+				LDAPDN            string `json:"ldap_dn"`
 			} `json:"owner"`
 			Private          bool      `json:"private"`
 			HTMLURL          string    `json:"html_url"`
@@ -182,7 +182,7 @@ type PullRequestPayload struct {
 	Base struct {
 		Label string `json:"label"`
 		Ref   string `json:"ref"`
-		Sha   string `json:"sha"`
+		SHA   string `json:"sha"`
 		User  struct {
 			Login             string `json:"login"`
 			ID                int    `json:"id"`
@@ -201,7 +201,7 @@ type PullRequestPayload struct {
 			ReceivedEventsURL string `json:"received_events_url"`
 			Type              string `json:"type"`
 			SiteAdmin         bool   `json:"site_admin"`
-			LdapDn            string `json:"ldap_dn"`
+			LDAPDN            string `json:"ldap_dn"`
 		} `json:"user"`
 		Repo struct {
 			ID       int    `json:"id"`
@@ -225,7 +225,7 @@ type PullRequestPayload struct {
 				ReceivedEventsURL string `json:"received_events_url"`
 				Type              string `json:"type"`
 				SiteAdmin         bool   `json:"site_admin"`
-				LdapDn            string `json:"ldap_dn"`
+				LDAPDN            string `json:"ldap_dn"`
 			} `json:"owner"`
 			Private          bool      `json:"private"`
 			HTMLURL          string    `json:"html_url"`
@@ -364,11 +364,33 @@ type Commit struct {
 	} `json:"parents"`
 }
 
-/*func (p *PullRequestsApi) ListPullRequests(owner, repo string) ([]PullRequestPayload, error) {
-	// TODO
-	_ = p.getUrl("/repos/:owner/:repo/pulls")
-	return nil, nil
-}*/
+func (api *PullRequestsAPI) ListPullRequests(state string) ([]PullRequestPayload, error) {
+	var allPullRequests []PullRequestPayload
+	for page := 1; ; page++ {
+		url := api.getURL(fmt.Sprintf("/repos/:owner/:repo/pulls?state=%s&page=%d", state, page))
+
+		resp, err := api.httpGet(url)
+		//resp.Header["Link"] // TODO (judwhite), get next page until last
+		//<url>; rel="last", <url>; rel="first", <url>; rel="prev", <url>; rel="next"
+		if err != nil {
+			return nil, err
+		}
+
+		pullRequests := make([]PullRequestPayload, 0)
+		if err = json.NewDecoder(resp.Body).Decode(&pullRequests); err != nil {
+			resp.Body.Close()
+			return nil, err
+		}
+		resp.Body.Close()
+
+		allPullRequests = append(allPullRequests, pullRequests...)
+		if len(pullRequests) == 0 || resp.Header.Get("Link") == "" {
+			break
+		}
+	}
+
+	return allPullRequests, nil
+}
 
 func (api *PullRequestsAPI) GetPullRequest(pullRequestNumber int) (*PullRequestPayload, error) {
 	url := api.getURL("/repos/:owner/:repo/pulls/" + strconv.Itoa(pullRequestNumber))

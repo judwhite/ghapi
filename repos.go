@@ -1,6 +1,7 @@
 package ghapi
 
 import (
+	"encoding/json"
 	"strconv"
 	"time"
 )
@@ -103,4 +104,23 @@ type RepositoryPayload struct {
 	OpenIssues      int    `json:"open_issues"`
 	Watchers        int    `json:"watchers"`
 	DefaultBranch   string `json:"default_branch"`
+}
+
+func (api *RepositoryAPI) Get() (*RepositoryPayload, error) {
+	url := api.getURL("/repos/:owner/:repo")
+
+	resp, err := api.httpGet(url)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	var repository RepositoryPayload
+
+	j := json.NewDecoder(resp.Body)
+	if err = j.Decode(&repository); err != nil {
+		return nil, err
+	}
+
+	return &repository, nil
 }
