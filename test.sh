@@ -7,7 +7,7 @@
 # go get -u github.com/mdempsky/unconvert
 # go get -u github.com/client9/misspell/cmd/misspell
 # go get -u github.com/gordonklaus/ineffassign
-# go get -u honnef.co/go/staticcheck
+# go get -u honnef.co/go/staticcheck/cmd/staticcheck
 # go get -u github.com/fzipp/gocyclo
 
 # convert path to lowercase
