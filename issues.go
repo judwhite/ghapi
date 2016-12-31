@@ -48,11 +48,13 @@ type IssueCommentPayload struct {
 	Body      string    `json:"body"`
 }
 
+// DeleteIssueComment deletes an issue comment by ID.
 func (api *IssueAPI) DeleteIssueComment(commentID int) error {
 	url := api.getURL("/repos/:owner/:repo/issues/comments/" + strconv.Itoa(commentID))
 	return api.DeleteIssueCommentByURL(url)
 }
 
+// DeleteIssueCommentByURL deletes an issue comment by URL.
 func (api *IssueAPI) DeleteIssueCommentByURL(url string) error {
 	resp, err := api.httpDelete(url)
 	if err != nil {
@@ -63,6 +65,7 @@ func (api *IssueAPI) DeleteIssueCommentByURL(url string) error {
 	return nil
 }
 
+// GetIssueComment gets an issue comment by ID.
 func (api *IssueAPI) GetIssueComment(commentID int) (*IssueCommentPayload, error) {
 	url := api.getURL("/repos/:owner/:repo/issues/comments/" + strconv.Itoa(commentID))
 
@@ -82,11 +85,13 @@ func (api *IssueAPI) GetIssueComment(commentID int) (*IssueCommentPayload, error
 	return issueComment, nil
 }
 
+// GetIssue gets an issue by issue number.
 func (api *IssueAPI) GetIssue(issueNumber int) (*IssuePayload, error) {
 	url := api.getURL("/repos/:owner/:repo/issues/" + strconv.Itoa(issueNumber))
 	return api.GetIssueByURL(url)
 }
 
+// GetIssueByURL gets an issue by URL.
 func (api *IssueAPI) GetIssueByURL(url string) (*IssuePayload, error) {
 	resp, err := api.httpGet(url)
 	if err != nil {
@@ -104,12 +109,15 @@ func (api *IssueAPI) GetIssueByURL(url string) (*IssuePayload, error) {
 	return issue, nil
 }
 
+// UpdateIssueAssignee updates an issue's assignee by issue number.
 func (api *IssueAPI) UpdateIssueAssignee(issueNumber int, assignee string) (*IssuePayload, error) {
 	url := api.getURL("/repos/:owner/:repo/issues/" + strconv.Itoa(issueNumber))
 	return api.UpdateIssueAssigneeByURL(url, assignee)
 }
 
+// UpdateIssueAssigneeByURL updates an issue's assignee by issue URL.
 func (api *IssueAPI) UpdateIssueAssigneeByURL(url, assignee string) (*IssuePayload, error) {
+	// TODO (judwhite): there can be multiple assignees
 	body := struct {
 		Assignee string `json:"assignee"`
 	}{assignee}
@@ -117,11 +125,15 @@ func (api *IssueAPI) UpdateIssueAssigneeByURL(url, assignee string) (*IssuePaylo
 	return api.updateIssueByURL(url, body)
 }
 
+// UpdateIssueLabels updates an issue's labels by issue number. The labels passed become the new
+// labels. See AddLabel and RemoveLabel to add/remove individual labels.
 func (api *IssueAPI) UpdateIssueLabels(issueNumber int, labels []string) (*IssuePayload, error) {
 	url := api.getURL("/repos/:owner/:repo/issues/" + strconv.Itoa(issueNumber))
 	return api.UpdateIssueLabelsByURL(url, labels)
 }
 
+// UpdateIssueLabelsByURL updates an issue's labels by issue URL. The labels passed become the new
+// labels. See AddLabel and RemoveLabel to add/remove individual labels.
 func (api *IssueAPI) UpdateIssueLabelsByURL(url string, labels []string) (*IssuePayload, error) {
 	body := struct {
 		Labels []string `json:"labels"`
@@ -130,6 +142,7 @@ func (api *IssueAPI) UpdateIssueLabelsByURL(url string, labels []string) (*Issue
 	return api.updateIssueByURL(url, body)
 }
 
+// AddLabel adds a label to an issue.
 func (api *IssueAPI) AddLabel(issueNumber int, labelName string) error {
 	issue, err := api.GetIssue(issueNumber)
 	if err != nil {
@@ -148,6 +161,7 @@ func (api *IssueAPI) AddLabel(issueNumber int, labelName string) error {
 	return err
 }
 
+// RemoveLabel remove a label from an issue.
 func (api *IssueAPI) RemoveLabel(issueNumber int, labelName string) error {
 	issue, err := api.GetIssue(issueNumber)
 	if err != nil {
@@ -183,12 +197,12 @@ func (api *IssueAPI) updateIssueByURL(url string, body interface{}) (*IssuePaylo
 	}
 	defer resp.Body.Close()
 
-	issue := &IssuePayload{}
+	var issue IssuePayload
 
 	j := json.NewDecoder(resp.Body)
 	if err = j.Decode(&issue); err != nil {
 		return nil, err
 	}
 
-	return issue, nil
+	return &issue, nil
 }
