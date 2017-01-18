@@ -1,6 +1,10 @@
 package ghapi
 
-import "time"
+import (
+	"encoding/json"
+	"fmt"
+	"time"
+)
 
 // OrganizationPayload contains information about the Organization
 type OrganizationPayload struct {
@@ -38,4 +42,94 @@ type OrganizationPlanPayload struct {
 	Name         string `json:"name"`
 	Space        int64  `json:"space"`
 	PrivateRepos int64  `json:"private_repos"`
+}
+
+type ListTeamsResponse struct {
+	ID              int    `json:"id"`
+	URL             string `json:"url"`
+	Name            string `json:"name"`
+	Slug            string `json:"slug"`
+	Description     string `json:"description"`
+	Privacy         string `json:"privacy"`
+	Permission      string `json:"permission"`
+	MembersURL      string `json:"members_url"`
+	RepositoriesURL string `json:"repositories_url"`
+}
+
+type ListTeamMembersResponse struct {
+	Login             string `json:"login"`
+	ID                int    `json:"id"`
+	AvatarURL         string `json:"avatar_url"`
+	GravatarID        string `json:"gravatar_id"`
+	URL               string `json:"url"`
+	HTMLURL           string `json:"html_url"`
+	FollowersURL      string `json:"followers_url"`
+	FollowingURL      string `json:"following_url"`
+	GistsURL          string `json:"gists_url"`
+	StarredURL        string `json:"starred_url"`
+	SubscriptionsURL  string `json:"subscriptions_url"`
+	OrganizationsURL  string `json:"organizations_url"`
+	ReposURL          string `json:"repos_url"`
+	EventsURL         string `json:"events_url"`
+	ReceivedEventsURL string `json:"received_events_url"`
+	Type              string `json:"type"`
+	SiteAdmin         bool   `json:"site_admin"`
+}
+
+func (api *OrganizationAPI) ListTeams() ([]ListTeamsResponse, error) {
+	var allTeams []ListTeamsResponse
+	for page := 1; ; page++ {
+		url := api.addBaseURL(fmt.Sprintf("/orgs/%s/teams?page=%d", api.Organization, page))
+
+		resp, err := api.httpGet(url)
+		//resp.Header["Link"] // TODO (judwhite), get next page until last
+		//<url>; rel="last", <url>; rel="first", <url>; rel="prev", <url>; rel="next"
+		if err != nil {
+			return nil, err
+		}
+
+		teams := make([]ListTeamsResponse, 0)
+		if err = json.NewDecoder(resp.Body).Decode(&teams); err != nil {
+			resp.Body.Close()
+			return nil, err
+		}
+		resp.Body.Close()
+
+		allTeams = append(allTeams, teams...)
+		if len(teams) == 0 || resp.Header.Get("Link") == "" {
+			break
+		}
+	}
+
+	return allTeams, nil
+}
+
+// ListTeamMembers returns a list of team members.
+// role is "member" (normal members of the team), "maintainer" (team maintainers), or "all".
+func (api *OrganizationAPI) ListTeamMembers(teamID int, role string) ([]ListTeamMembersResponse, error) {
+	var allTeamMembers []ListTeamMembersResponse
+	for page := 1; ; page++ {
+		url := api.addBaseURL(fmt.Sprintf("/teams/%d/members?role=%s&page=%d", teamID, role, page))
+
+		resp, err := api.httpGet(url)
+		//resp.Header["Link"] // TODO (judwhite), get next page until last
+		//<url>; rel="last", <url>; rel="first", <url>; rel="prev", <url>; rel="next"
+		if err != nil {
+			return nil, err
+		}
+
+		teamMembers := make([]ListTeamMembersResponse, 0)
+		if err = json.NewDecoder(resp.Body).Decode(&teamMembers); err != nil {
+			resp.Body.Close()
+			return nil, err
+		}
+		resp.Body.Close()
+
+		allTeamMembers = append(allTeamMembers, teamMembers...)
+		if len(teamMembers) == 0 || resp.Header.Get("Link") == "" {
+			break
+		}
+	}
+
+	return allTeamMembers, nil
 }

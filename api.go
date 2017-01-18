@@ -42,6 +42,7 @@ type UserAPI struct {
 
 type OrganizationAPI struct {
 	APIInfo
+	Organization string
 }
 
 type PullRequestsAPI struct {
@@ -122,7 +123,7 @@ func NewGitHubAPI(baseURL, owner, repository, authToken string) GitHubAPI {
 
 	gitHubAPI.Issue = IssueAPI{RepositoryInfo: repositoryInfo}
 	gitHubAPI.User = UserAPI{APIInfo: apiInfo}
-	gitHubAPI.Organization = OrganizationAPI{APIInfo: apiInfo}
+	gitHubAPI.Organization = OrganizationAPI{APIInfo: apiInfo, Organization: owner}
 	gitHubAPI.PullRequest = PullRequestsAPI{RepositoryInfo: repositoryInfo}
 	gitHubAPI.Status = StatusAPI{RepositoryInfo: repositoryInfo}
 	gitHubAPI.Branch = BranchesAPI{RepositoryInfo: repositoryInfo}
@@ -175,8 +176,7 @@ func (apiInfo *APIInfo) addBaseURL(url string) string {
 func (apiInfo *RepositoryInfo) getURL(url string) string {
 	url = strings.Replace(url, ":owner", apiInfo.Owner, 1)
 	url = strings.Replace(url, ":repo", apiInfo.Repository, 1)
-	url = apiInfo.BaseURL + url
-	return url
+	return apiInfo.addBaseURL(url)
 }
 
 func (apiInfo *APIInfo) getHTTPRequest(method, url string, body *string) (*http.Request, error) {
