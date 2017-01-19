@@ -2,6 +2,7 @@ package ghapi
 
 import "encoding/json"
 
+// Branch represents a branch in a repository. This value is returned by BranchesAPI.GetBranch.
 type Branch struct {
 	Name   string `json:"name"`
 	Commit struct {
@@ -15,7 +16,7 @@ type Branch struct {
 			URL     string `json:"url"`
 			Message string `json:"message"`
 			Tree    struct {
-				Sha string `json:"sha"`
+				SHA string `json:"sha"`
 				URL string `json:"url"`
 			} `json:"tree"`
 			Committer struct {
@@ -32,7 +33,7 @@ type Branch struct {
 			Login      string `json:"login"`
 		} `json:"author"`
 		Parents []struct {
-			Sha string `json:"sha"`
+			SHA string `json:"sha"`
 			URL string `json:"url"`
 		} `json:"parents"`
 		URL       string `json:"url"`
@@ -52,6 +53,7 @@ type Branch struct {
 	ProtectionURL string `json:"protection_url"`
 }
 
+// GetBranch gets a branch by name.
 func (api *BranchesAPI) GetBranch(branch string) (*Branch, error) {
 	url := api.getURL("/repos/:owner/:repo/branches/" + branch)
 

@@ -158,7 +158,7 @@ const getIssueComment1Response string = `{
   "updated_at": "2011-04-14T16:00:49Z"
 }`
 
-func expectIssue1347(t *testing.T, issue *IssuePayload) {
+func expectIssue1347(t *testing.T, issue *IssueResponse) {
 	expectNotNil(t, issue, "issue")
 	expect(t, 1, issue.ID, "issue.Id")
 	expect(t, "https://api.github.com/repos/octocat/Hello-World/issues/1347", issue.URL, "issue.Url")

@@ -7,19 +7,23 @@ import (
 	"io/ioutil"
 	"net/http"
 	"strings"
+	"time"
 )
 
+// APIInfo contains the API URL and Authtoken for making API requests. APIInfo is embedded in all other API structs.
 type APIInfo struct {
 	BaseURL     string
 	OAuth2Token string
 }
 
+// RepositoryInfo contains APIInfo, the repository owner, and the repository name.
 type RepositoryInfo struct {
 	APIInfo
 	Owner      string
 	Repository string
 }
 
+// GitHubAPI is returned by the NewGitHubAPI function and contains fields for making API calls.
 type GitHubAPI struct {
 	APIInfo
 	Issue        IssueAPI
@@ -32,75 +36,85 @@ type GitHubAPI struct {
 	Contents     ContentsAPI
 }
 
+// IssueAPI is used to get information about a repository's issues. Note Pull Requests are treated as issues in some
+// cases, for example labeling a Pull Request is done through IssueAPI.
 type IssueAPI struct {
 	RepositoryInfo
 }
 
+// UserAPI is used to get information about a user.
 type UserAPI struct {
 	APIInfo
 }
 
+// OrganizationAPI is used to get information about an organization.
 type OrganizationAPI struct {
 	APIInfo
 	Organization string
 }
 
+// PullRequestsAPI is used to get information about a repository's pull requests.
 type PullRequestsAPI struct {
 	RepositoryInfo
 }
 
+// StatusAPI is used to get commit status information in a repository.
 type StatusAPI struct {
 	RepositoryInfo
 }
 
+// BranchesAPI is used to get information about a repository's branches.
 type BranchesAPI struct {
 	RepositoryInfo
 }
 
+// RepositoryAPI is used to get information about a repository.
 type RepositoryAPI struct {
 	RepositoryInfo
 }
 
+// ContentsAPI is used to get information about the contents of a file in a repository.
 type ContentsAPI struct {
 	RepositoryInfo
 }
 
+// AuthenticatedUser contains information about the current authenticated user.
 type AuthenticatedUser struct {
-	Login             string     `json:"login"`
-	ID                int        `json:"id"`
-	AvatarURL         string     `json:"avatar_url"`
-	GravatarID        string     `json:"gravatar_id"`
-	URL               string     `json:"url"`
-	HTMLURL           string     `json:"html_url"`
-	FollowersURL      string     `json:"followers_url"`
-	FollowingURL      string     `json:"following_url"`
-	GistsURL          string     `json:"gists_url"`
-	StarredURL        string     `json:"starred_url"`
-	SubscriptionsURL  string     `json:"subscriptions_url"`
-	OrganizationsURL  string     `json:"organizations_url"`
-	ReposURL          string     `json:"repos_url"`
-	EventsURL         string     `json:"events_url"`
-	ReceivedEventsURL string     `json:"received_events_url"`
-	Type              string     `json:"type"`
-	SiteAdmin         bool       `json:"site_admin"`
-	Name              string     `json:"name"`
-	Company           string     `json:"company"`
-	Blog              string     `json:"blog"`
-	Location          string     `json:"location"`
-	Email             string     `json:"email"`
-	Hireable          bool       `json:"hireable"`
-	Bio               string     `json:"bio"`
-	PublicRepos       int        `json:"public_repos"`
-	PublicGists       int        `json:"public_gists"`
-	Followers         int        `json:"followers"`
-	Following         int        `json:"following"`
-	CreatedAt         CustomTime `json:"created_at"`
-	UpdatedAt         CustomTime `json:"updated_at"`
-	TotalPrivateRepos int        `json:"total_private_repos"`
-	OwnedPrivateRepos int        `json:"owned_private_repos"`
-	PrivateGists      int        `json:"private_gists"`
-	DiskUsage         int        `json:"disk_usage"`
-	Collaborators     int        `json:"collaborators"`
+	Login             string    `json:"login"`
+	ID                int       `json:"id"`
+	AvatarURL         string    `json:"avatar_url"`
+	GravatarID        string    `json:"gravatar_id"`
+	URL               string    `json:"url"`
+	HTMLURL           string    `json:"html_url"`
+	FollowersURL      string    `json:"followers_url"`
+	FollowingURL      string    `json:"following_url"`
+	GistsURL          string    `json:"gists_url"`
+	StarredURL        string    `json:"starred_url"`
+	SubscriptionsURL  string    `json:"subscriptions_url"`
+	OrganizationsURL  string    `json:"organizations_url"`
+	ReposURL          string    `json:"repos_url"`
+	EventsURL         string    `json:"events_url"`
+	ReceivedEventsURL string    `json:"received_events_url"`
+	Type              string    `json:"type"`
+	SiteAdmin         bool      `json:"site_admin"`
+	Name              string    `json:"name"`
+	Company           string    `json:"company"`
+	Blog              string    `json:"blog"`
+	Location          string    `json:"location"`
+	Email             string    `json:"email"`
+	Hireable          bool      `json:"hireable"`
+	Bio               string    `json:"bio"`
+	PublicRepos       int       `json:"public_repos"`
+	PublicGists       int       `json:"public_gists"`
+	Followers         int       `json:"followers"`
+	Following         int       `json:"following"`
+	CreatedAt         time.Time `json:"created_at"`
+	UpdatedAt         time.Time `json:"updated_at"`
+	TotalPrivateRepos int       `json:"total_private_repos"`
+	OwnedPrivateRepos int       `json:"owned_private_repos"`
+	PrivateGists      int       `json:"private_gists"`
+	DiskUsage         int       `json:"disk_usage"`
+	Collaborators     int       `json:"collaborators"`
 	Plan              struct {
 		Name          string `json:"name"`
 		Space         int    `json:"space"`

@@ -6,46 +6,68 @@ import (
 	"time"
 )
 
-type IssuePayload struct {
-	URL         string                   `json:"url"`
-	LabelsURL   string                   `json:"labels_url"`
-	CommentsURL string                   `json:"comments_url"`
-	EventsURL   string                   `json:"events_url"`
-	HTMLURL     string                   `json:"html_url"`
-	ID          int                      `json:"id"`
-	Number      int                      `json:"number"`
-	Title       string                   `json:"title"`
-	User        User                     `json:"user"`
-	Labels      []LabelPayload           `json:"labels"`
-	State       string                   `json:"state"`
-	Locked      bool                     `json:"locked"`
-	Assignee    *User                    `json:"assignee"`
-	Milestone   *MilestonePayload        `json:"milestone"`
-	Comments    int                      `json:"comments"`
-	PullRequest *IssuePullRequestPayload `json:"pull_request"`
-	CreatedAt   time.Time                `json:"created_at"`
-	UpdatedAt   time.Time                `json:"updated_at"`
-	ClosedAt    *time.Time               `json:"closed_at"`
-	Body        string                   `json:"body"`
-	ClosedBy    *User                    `json:"closed_by"`
+// IssueResponse contains Issue information. This value is returned by IssuesAPI for get and edit API calls.
+type IssueResponse struct {
+	ID            int    `json:"id"`
+	URL           string `json:"url"`
+	RepositoryURL string `json:"repository_url"`
+	LabelsURL     string `json:"labels_url"`
+	CommentsURL   string `json:"comments_url"`
+	EventsURL     string `json:"events_url"`
+	HTMLURL       string `json:"html_url"`
+	Number        int    `json:"number"`
+	State         string `json:"state"`
+	Title         string `json:"title"`
+	Body          string `json:"body"`
+	User          User   `json:"user"`
+	Labels        []struct {
+		ID      int    `json:"id"`
+		URL     string `json:"url"`
+		Name    string `json:"name"`
+		Color   string `json:"color"`
+		Default bool   `json:"default"`
+	} `json:"labels"`
+	Assignee  *User `json:"assignee"`
+	Milestone struct {
+		URL          string     `json:"url"`
+		HTMLURL      string     `json:"html_url"`
+		LabelsURL    string     `json:"labels_url"`
+		ID           int        `json:"id"`
+		Number       int        `json:"number"`
+		State        string     `json:"state"`
+		Title        string     `json:"title"`
+		Description  string     `json:"description"`
+		Creator      User       `json:"creator"`
+		OpenIssues   int        `json:"open_issues"`
+		ClosedIssues int        `json:"closed_issues"`
+		CreatedAt    time.Time  `json:"created_at"`
+		UpdatedAt    time.Time  `json:"updated_at"`
+		ClosedAt     *time.Time `json:"closed_at"`
+		DueOn        *time.Time `json:"due_on"`
+	} `json:"milestone"`
+	Locked      bool `json:"locked"`
+	Comments    int  `json:"comments"`
+	PullRequest struct {
+		URL      string `json:"url"`
+		HTMLURL  string `json:"html_url"`
+		DiffURL  string `json:"diff_url"`
+		PatchURL string `json:"patch_url"`
+	} `json:"pull_request"`
+	ClosedAt  *time.Time `json:"closed_at"`
+	CreatedAt time.Time  `json:"created_at"`
+	UpdatedAt time.Time  `json:"updated_at"`
+	ClosedBy  *User      `json:"closed_by"`
 }
 
-type IssuePullRequestPayload struct {
-	URL      string `json:"url"`
-	HTMLURL  string `json:"html_url"`
-	DiffURL  string `json:"diff_url"`
-	PatchURL string `json:"patch_url"`
-}
-
-type IssueCommentPayload struct {
+// IssueCommentResponse returns information about a specific comment on an issue.
+type IssueCommentResponse struct {
+	ID        int       `json:"id"`
 	URL       string    `json:"url"`
 	HTMLURL   string    `json:"html_url"`
-	IssueURL  string    `json:"issue_url"`
-	ID        int       `json:"id"`
+	Body      string    `json:"body"`
 	User      User      `json:"user"`
 	CreatedAt time.Time `json:"created_at"`
 	UpdatedAt time.Time `json:"updated_at"`
-	Body      string    `json:"body"`
 }
 
 // DeleteIssueComment deletes an issue comment by ID.
@@ -66,7 +88,7 @@ func (api *IssueAPI) DeleteIssueCommentByURL(url string) error {
 }
 
 // GetIssueComment gets an issue comment by ID.
-func (api *IssueAPI) GetIssueComment(commentID int) (*IssueCommentPayload, error) {
+func (api *IssueAPI) GetIssueComment(commentID int) (*IssueCommentResponse, error) {
 	url := api.getURL("/repos/:owner/:repo/issues/comments/" + strconv.Itoa(commentID))
 
 	resp, err := api.httpGet(url)
@@ -75,48 +97,48 @@ func (api *IssueAPI) GetIssueComment(commentID int) (*IssueCommentPayload, error
 	}
 	defer resp.Body.Close()
 
-	issueComment := &IssueCommentPayload{}
+	var issueComment IssueCommentResponse
 
 	j := json.NewDecoder(resp.Body)
 	if err = j.Decode(&issueComment); err != nil {
 		return nil, err
 	}
 
-	return issueComment, nil
+	return &issueComment, nil
 }
 
 // GetIssue gets an issue by issue number.
-func (api *IssueAPI) GetIssue(issueNumber int) (*IssuePayload, error) {
+func (api *IssueAPI) GetIssue(issueNumber int) (*IssueResponse, error) {
 	url := api.getURL("/repos/:owner/:repo/issues/" + strconv.Itoa(issueNumber))
 	return api.GetIssueByURL(url)
 }
 
 // GetIssueByURL gets an issue by URL.
-func (api *IssueAPI) GetIssueByURL(url string) (*IssuePayload, error) {
+func (api *IssueAPI) GetIssueByURL(url string) (*IssueResponse, error) {
 	resp, err := api.httpGet(url)
 	if err != nil {
 		return nil, err
 	}
 	defer resp.Body.Close()
 
-	issue := &IssuePayload{}
+	var issue IssueResponse
 
 	j := json.NewDecoder(resp.Body)
 	if err = j.Decode(&issue); err != nil {
 		return nil, err
 	}
 
-	return issue, nil
+	return &issue, nil
 }
 
 // UpdateIssueAssignee updates an issue's assignee by issue number.
-func (api *IssueAPI) UpdateIssueAssignee(issueNumber int, assignee string) (*IssuePayload, error) {
+func (api *IssueAPI) UpdateIssueAssignee(issueNumber int, assignee string) (*IssueResponse, error) {
 	url := api.getURL("/repos/:owner/:repo/issues/" + strconv.Itoa(issueNumber))
 	return api.UpdateIssueAssigneeByURL(url, assignee)
 }
 
 // UpdateIssueAssigneeByURL updates an issue's assignee by issue URL.
-func (api *IssueAPI) UpdateIssueAssigneeByURL(url, assignee string) (*IssuePayload, error) {
+func (api *IssueAPI) UpdateIssueAssigneeByURL(url, assignee string) (*IssueResponse, error) {
 	// TODO (judwhite): there can be multiple assignees
 	body := struct {
 		Assignee string `json:"assignee"`
@@ -127,14 +149,14 @@ func (api *IssueAPI) UpdateIssueAssigneeByURL(url, assignee string) (*IssuePaylo
 
 // UpdateIssueLabels updates an issue's labels by issue number. The labels passed become the new
 // labels. See AddLabel and RemoveLabel to add/remove individual labels.
-func (api *IssueAPI) UpdateIssueLabels(issueNumber int, labels []string) (*IssuePayload, error) {
+func (api *IssueAPI) UpdateIssueLabels(issueNumber int, labels []string) (*IssueResponse, error) {
 	url := api.getURL("/repos/:owner/:repo/issues/" + strconv.Itoa(issueNumber))
 	return api.UpdateIssueLabelsByURL(url, labels)
 }
 
 // UpdateIssueLabelsByURL updates an issue's labels by issue URL. The labels passed become the new
 // labels. See AddLabel and RemoveLabel to add/remove individual labels.
-func (api *IssueAPI) UpdateIssueLabelsByURL(url string, labels []string) (*IssuePayload, error) {
+func (api *IssueAPI) UpdateIssueLabelsByURL(url string, labels []string) (*IssueResponse, error) {
 	body := struct {
 		Labels []string `json:"labels"`
 	}{labels}
@@ -185,7 +207,7 @@ func (api *IssueAPI) RemoveLabel(issueNumber int, labelName string) error {
 	return err
 }
 
-func (api *IssueAPI) updateIssueByURL(url string, body interface{}) (*IssuePayload, error) {
+func (api *IssueAPI) updateIssueByURL(url string, body interface{}) (*IssueResponse, error) {
 	b, err := json.Marshal(body)
 	if err != nil {
 		return nil, err
@@ -197,7 +219,7 @@ func (api *IssueAPI) updateIssueByURL(url string, body interface{}) (*IssuePaylo
 	}
 	defer resp.Body.Close()
 
-	var issue IssuePayload
+	var issue IssueResponse
 
 	j := json.NewDecoder(resp.Body)
 	if err = j.Decode(&issue); err != nil {

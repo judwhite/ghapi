@@ -161,7 +161,7 @@ func TestUserApi_GetOrganizations(t *testing.T) {
 	})
 	defer ts.Close()
 
-	orgs, err := api.User.GetOrganizations("octocat")
+	orgs, err := api.User.GetPublicOrganizations("octocat")
 	waitSignal(t, signal)
 
 	if err != nil {
@@ -188,7 +188,7 @@ func TestUserApi_GetOrganizations_ReturnsErrOnHttpErr(t *testing.T) {
 	})
 	defer ts.Close()
 
-	u, err := api.User.GetOrganizations("octocat")
+	u, err := api.User.GetPublicOrganizations("octocat")
 	waitSignal(t, signal)
 
 	expectNil(t, u, "u")
@@ -207,7 +207,7 @@ func TestUserApi_GetOrganizations_ReturnsErrOnJsonDecodeErr(t *testing.T) {
 	})
 	defer ts.Close()
 
-	u, err := api.User.GetOrganizations("octocat")
+	u, err := api.User.GetPublicOrganizations("octocat")
 	waitSignal(t, signal)
 
 	expectNil(t, u, "u")

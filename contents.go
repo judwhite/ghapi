@@ -2,6 +2,7 @@ package ghapi
 
 import "encoding/json"
 
+// Contents is returned by ContentsAPI.GetContent. The Content field is Base64 encoded.
 type Contents struct {
 	Type        string `json:"type"`
 	Encoding    string `json:"encoding"`
@@ -21,6 +22,9 @@ type Contents struct {
 	} `json:"_links"`
 }
 
+// GetContent gets the content for the specified path from the default branch. The Contents.Content field
+// will be Base64 encoded. This API supports files up to 1MB in size.
+// TODO (judwhite): API can get contents from others refs; see https://developer.github.com/v3/repos/contents/#get-contents
 func (api *ContentsAPI) GetContent(path string) (*Contents, error) {
 	url := api.getURL("/repos/:owner/:repo/contents/") + path
 

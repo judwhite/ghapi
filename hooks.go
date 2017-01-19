@@ -9,6 +9,8 @@ import (
 	"net/http"
 )
 
+// ReadRequest takes an expected GitHub webhook secret and an *http.Request. If signature validation succeeds the
+// GitHubEventType and request body as a byte slice are returned.
 func ReadRequest(secret []byte, r *http.Request) (GitHubEventType, []byte, error) {
 	var body []byte
 	var err error
