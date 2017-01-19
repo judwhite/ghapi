@@ -44,6 +44,7 @@ type OrganizationPlanPayload struct {
 	PrivateRepos int64  `json:"private_repos"`
 }
 
+// ListTeamsResponse is the response from OrganizationAPI.ListTeams.
 type ListTeamsResponse struct {
 	ID              int    `json:"id"`
 	URL             string `json:"url"`
@@ -56,6 +57,7 @@ type ListTeamsResponse struct {
 	RepositoriesURL string `json:"repositories_url"`
 }
 
+// ListTeamMembersResponse is the response from OrganizationAPI.ListTeamMembers.
 type ListTeamMembersResponse struct {
 	Login             string `json:"login"`
 	ID                int    `json:"id"`
@@ -76,6 +78,7 @@ type ListTeamMembersResponse struct {
 	SiteAdmin         bool   `json:"site_admin"`
 }
 
+// ListTeams lists and organization's teams. Note: to use this API call your authtoken must have org:read permission.
 func (api *OrganizationAPI) ListTeams() ([]ListTeamsResponse, error) {
 	var allTeams []ListTeamsResponse
 	for page := 1; ; page++ {
@@ -85,6 +88,13 @@ func (api *OrganizationAPI) ListTeams() ([]ListTeamsResponse, error) {
 		//resp.Header["Link"] // TODO (judwhite), get next page until last
 		//<url>; rel="last", <url>; rel="first", <url>; rel="prev", <url>; rel="next"
 		if err != nil {
+			switch val := err.(type) {
+			case *ErrHTTPError:
+				if val.StatusCode == 403 {
+					val.Message = "does your authtoken have org:read permission?"
+					return nil, val
+				}
+			}
 			return nil, err
 		}
 
@@ -104,7 +114,7 @@ func (api *OrganizationAPI) ListTeams() ([]ListTeamsResponse, error) {
 	return allTeams, nil
 }
 
-// ListTeamMembers returns a list of team members.
+// ListTeamMembers list team members for the specified teamID.
 // role is "member" (normal members of the team), "maintainer" (team maintainers), or "all".
 func (api *OrganizationAPI) ListTeamMembers(teamID int, role string) ([]ListTeamMembersResponse, error) {
 	var allTeamMembers []ListTeamMembersResponse
