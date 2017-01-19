@@ -50,7 +50,7 @@ fi
 
 echo "- Checking errcheck..."
 for dir in $DIRS; do
-  errRes=$(errcheck -blank -asserts ${dir})
+  errRes=$(errcheck -blank -asserts -exclude errcheck_excludes.txt ${dir})
   if [ $? -ne 0 ]; then
     echo "errcheck checking failed: ${errRes}"
     hasErr=1
