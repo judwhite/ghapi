@@ -344,7 +344,7 @@ type ForkResponse struct {
 	} `json:"permissions"`
 }
 
-// RepositoryCommit represents a commit in a repository.
+// RepositoryCommit represents a commit summary in a repository.
 type RepositoryCommit struct {
 	URL         string `json:"url"`
 	SHA         string `json:"sha"`
@@ -381,6 +381,60 @@ type RepositoryCommit struct {
 		URL string `json:"url"`
 		SHA string `json:"sha"`
 	} `json:"parents"`
+}
+
+// Commit represents commit details.
+type Commit struct {
+	URL         string `json:"url"`
+	SHA         string `json:"sha"`
+	HTMLURL     string `json:"html_url"`
+	CommentsURL string `json:"comments_url"`
+	Commit      struct {
+		URL    string `json:"url"`
+		Author struct {
+			Name  string    `json:"name"`
+			Email string    `json:"email"`
+			Date  time.Time `json:"date"`
+		} `json:"author"`
+		Committer struct {
+			Name  string    `json:"name"`
+			Email string    `json:"email"`
+			Date  time.Time `json:"date"`
+		} `json:"committer"`
+		Message string `json:"message"`
+		Tree    struct {
+			URL string `json:"url"`
+			SHA string `json:"sha"`
+		} `json:"tree"`
+		CommentCount int `json:"comment_count"`
+		Verification struct {
+			Verified  bool   `json:"verified"`
+			Reason    string `json:"reason"`
+			Signature string `json:"signature"`
+			Payload   string `json:"payload"`
+		} `json:"verification"`
+	} `json:"commit"`
+	Author    User `json:"author"`
+	Committer User `json:"committer"`
+	Parents   []struct {
+		URL string `json:"url"`
+		SHA string `json:"sha"`
+	} `json:"parents"`
+	Stats struct {
+		Additions int `json:"additions"`
+		Deletions int `json:"deletions"`
+		Total     int `json:"total"`
+	} `json:"stats"`
+	Files []struct {
+		Filename  string `json:"filename"`
+		Additions int    `json:"additions"`
+		Deletions int    `json:"deletions"`
+		Changes   int    `json:"changes"`
+		Status    string `json:"status"`
+		RawURL    string `json:"raw_url"`
+		BlobURL   string `json:"blob_url"`
+		Patch     string `json:"patch"`
+	} `json:"files"`
 }
 
 // Get returns the repository information.
@@ -474,6 +528,26 @@ func (api *RepositoryAPI) GetCommits(page int) ([]RepositoryCommit, error) {
 	}
 
 	return commits, nil
+}
+
+// GetCommit returns commit details for the specified SHA.
+func (api *RepositoryAPI) GetCommit(sha string) (*Commit, error) {
+	url := api.getURL("/repos/:owner/:repo/commits/" + sha)
+
+	resp, err := api.httpGet(url)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	var commit Commit
+
+	j := json.NewDecoder(resp.Body)
+	if err = j.Decode(&commit); err != nil {
+		return nil, err
+	}
+
+	return &commit, nil
 }
 
 // Exists returns true if the repository exists.
