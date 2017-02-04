@@ -6,29 +6,32 @@ import (
 	"time"
 )
 
+// IssueLabel contains Issue label information. This type is used in IssueResponse.
+type IssueLabel struct {
+	ID      int    `json:"id"`
+	URL     string `json:"url"`
+	Name    string `json:"name"`
+	Color   string `json:"color"`
+	Default bool   `json:"default"`
+}
+
 // IssueResponse contains Issue information. This value is returned by IssuesAPI for get and edit API calls.
 type IssueResponse struct {
-	ID            int    `json:"id"`
-	URL           string `json:"url"`
-	RepositoryURL string `json:"repository_url"`
-	LabelsURL     string `json:"labels_url"`
-	CommentsURL   string `json:"comments_url"`
-	EventsURL     string `json:"events_url"`
-	HTMLURL       string `json:"html_url"`
-	Number        int    `json:"number"`
-	State         string `json:"state"`
-	Title         string `json:"title"`
-	Body          string `json:"body"`
-	User          User   `json:"user"`
-	Labels        []struct {
-		ID      int    `json:"id"`
-		URL     string `json:"url"`
-		Name    string `json:"name"`
-		Color   string `json:"color"`
-		Default bool   `json:"default"`
-	} `json:"labels"`
-	Assignee  *User `json:"assignee"`
-	Milestone struct {
+	ID            int          `json:"id"`
+	URL           string       `json:"url"`
+	RepositoryURL string       `json:"repository_url"`
+	LabelsURL     string       `json:"labels_url"`
+	CommentsURL   string       `json:"comments_url"`
+	EventsURL     string       `json:"events_url"`
+	HTMLURL       string       `json:"html_url"`
+	Number        int          `json:"number"`
+	State         string       `json:"state"`
+	Title         string       `json:"title"`
+	Body          string       `json:"body"`
+	User          User         `json:"user"`
+	Labels        []IssueLabel `json:"labels"`
+	Assignee      *User        `json:"assignee"`
+	Milestone     struct {
 		URL          string     `json:"url"`
 		HTMLURL      string     `json:"html_url"`
 		LabelsURL    string     `json:"labels_url"`
