@@ -578,3 +578,35 @@ func (api *RepositoryAPI) IsReady() (bool, error) {
 	}
 	return true, nil
 }
+
+// GetLabels returns all labels for the repository.
+func (api *RepositoryAPI) GetLabels() ([]IssueLabel, error) {
+	var allLabels []IssueLabel
+
+	for page := 1; ; page++ {
+		url := api.getURL(fmt.Sprintf("/repos/:owner/:repo/labels?page=%d", page))
+
+		resp, err := api.httpGet(url)
+		if err != nil {
+			return nil, err
+		}
+
+		var labels []IssueLabel
+
+		j := json.NewDecoder(resp.Body)
+		if err = j.Decode(&labels); err != nil {
+			resp.Body.Close()
+			return nil, err
+		}
+
+		resp.Body.Close()
+
+		if len(labels) == 0 {
+			break
+		}
+
+		allLabels = append(allLabels, labels...)
+	}
+
+	return allLabels, nil
+}
