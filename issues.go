@@ -2,6 +2,10 @@ package ghapi
 
 import (
 	"encoding/json"
+	"fmt"
+	"io"
+	"io/ioutil"
+	"net/url"
 	"strconv"
 	"time"
 )
@@ -169,44 +173,35 @@ func (api *IssueAPI) UpdateIssueLabelsByURL(url string, labels []string) (*Issue
 
 // AddLabel adds a label to an issue.
 func (api *IssueAPI) AddLabel(issueNumber int, labelName string) error {
-	issue, err := api.GetIssue(issueNumber)
+	url := api.getURL(fmt.Sprintf("/repos/:owner/:repo/issues/%d/labels", issueNumber))
+
+	labels := []string{labelName}
+	b, err := json.Marshal(labels)
 	if err != nil {
 		return err
 	}
-	var labels []string
-	for _, existingLabel := range issue.Labels {
-		if existingLabel.Name == labelName {
-			return nil
-		}
-		labels = append(labels, existingLabel.Name)
+	resp, err := api.httpPost(url, string(b))
+	if err != nil {
+		return err
 	}
+	defer resp.Body.Close()
 
-	labels = append(labels, labelName)
-	_, err = api.UpdateIssueLabels(issueNumber, labels)
+	_, err = io.Copy(ioutil.Discard, resp.Body)
 	return err
 }
 
 // RemoveLabel remove a label from an issue.
 func (api *IssueAPI) RemoveLabel(issueNumber int, labelName string) error {
-	issue, err := api.GetIssue(issueNumber)
+	removeLabelURL := api.getURL(fmt.Sprintf(
+		"/repos/:owner/:repo/issues/%d/labels/", issueNumber) + url.PathEscape(labelName))
+
+	resp, err := api.httpDelete(removeLabelURL)
 	if err != nil {
 		return err
 	}
-	labels := []string{}
-	var hasLabel bool
-	for _, existingLabel := range issue.Labels {
-		if existingLabel.Name == labelName {
-			hasLabel = true
-		} else {
-			labels = append(labels, existingLabel.Name)
-		}
-	}
+	defer resp.Body.Close()
 
-	if !hasLabel {
-		return nil
-	}
-
-	_, err = api.UpdateIssueLabels(issueNumber, labels)
+	_, err = io.Copy(ioutil.Discard, resp.Body)
 	return err
 }
 
