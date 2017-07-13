@@ -3,6 +3,9 @@ package ghapi
 import (
 	"encoding/json"
 	"fmt"
+	"io"
+	"io/ioutil"
+	"net/url"
 	"time"
 )
 
@@ -577,6 +580,54 @@ func (api *RepositoryAPI) IsReady() (bool, error) {
 		return false, err
 	}
 	return true, nil
+}
+
+// CreateLabel creates a label in the repository. color is a 6 character hex code without the leading #.
+func (api *RepositoryAPI) CreateLabel(name, color string) error {
+	body := struct {
+		Name  string `json:"name"`
+		Color string `json:"color"`
+	}{name, color}
+
+	b, err := json.Marshal(body)
+	if err != nil {
+		return err
+	}
+
+	url := api.getURL("/repos/:owner/:repo/labels")
+
+	resp, err := api.httpPost(url, string(b))
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+
+	_, err = io.Copy(ioutil.Discard, resp.Body)
+	return err
+}
+
+// UpdateLabel updates a label in the repository. color is a 6 character hex code without the leading #.
+func (api *RepositoryAPI) UpdateLabel(origName, newName, color string) error {
+	body := struct {
+		Name  string `json:"name"`
+		Color string `json:"color"`
+	}{newName, color}
+
+	b, err := json.Marshal(body)
+	if err != nil {
+		return err
+	}
+
+	apiURL := api.getURL("/repos/:owner/:repo/labels/" + url.PathEscape(origName))
+
+	resp, err := api.httpPatch(apiURL, string(b))
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+
+	_, err = io.Copy(ioutil.Discard, resp.Body)
+	return err
 }
 
 // GetLabels returns all labels for the repository.
