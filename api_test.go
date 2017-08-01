@@ -146,7 +146,7 @@ func TestApiInfo_addBaseUrl(t *testing.T) {
 
 func TestApiInfo_doHttpRequest_ReturnsErrOnParseError(t *testing.T) {
 	api := makeGitHubAPI()
-	resp, err := api.doHTTPRequest("GET", ":/noscheme", nil)
+	resp, err := api.doHTTPRequest("GET", ":/noscheme", nil, "")
 	expectNil(t, resp, "resp")
 	expectNotNil(t, err, "err")
 	expect(t, "parse :/noscheme: missing protocol scheme", err.Error(), "err.Error()")
@@ -154,7 +154,7 @@ func TestApiInfo_doHttpRequest_ReturnsErrOnParseError(t *testing.T) {
 
 func TestAPIInfo_doHTTPRequest_ReturnsErrOnDoError(t *testing.T) {
 	api := makeGitHubAPI()
-	resp, err := api.doHTTPRequest("GET", "http://0.0.0.0:0/wat", nil)
+	resp, err := api.doHTTPRequest("GET", "http://0.0.0.0:0/wat", nil, "")
 	expectNil(t, resp, "resp")
 	expectNotNil(t, err, "err")
 	expect(t, "Get http://0.0.0.0:0/wat: dial tcp 0.0.0.0:0: connectex: The requested address is not valid in its context.", err.Error(), "err.Error()")
@@ -172,7 +172,7 @@ func TestAPIInfo_doHTTPRequest_HasHeadersSet(t *testing.T) {
 	})
 	defer ts.Close()
 
-	resp, err := api.doHTTPRequest("GET", ts.URL+"/test_headers", nil)
+	resp, err := api.doHTTPRequest("GET", ts.URL+"/test_headers", nil, "")
 	waitSignal(t, signal)
 
 	expectNotNil(t, resp, "resp")
@@ -193,7 +193,7 @@ func TestAPIInfo_doHTTPRequest_AuthorizationHeadersNotSetWhenAuthTokenIsEmpty(t 
 	defer ts.Close()
 
 	api.OAuth2Token = ""
-	resp, err := api.doHTTPRequest("GET", ts.URL+"/test_headers", nil)
+	resp, err := api.doHTTPRequest("GET", ts.URL+"/test_headers", nil, "")
 	waitSignal(t, signal)
 
 	expectNotNil(t, resp, "resp")

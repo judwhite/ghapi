@@ -211,10 +211,14 @@ func (apiInfo *APIInfo) getHTTPRequest(method, url string, body *string) (*http.
 	return req, nil
 }
 
-func (apiInfo *APIInfo) doHTTPRequest(method, url string, body *string) (*http.Response, error) {
+func (apiInfo *APIInfo) doHTTPRequest(method, url string, body *string, acceptHeader string) (*http.Response, error) {
 	req, err := apiInfo.getHTTPRequest(method, url, body)
 	if err != nil {
 		return nil, err
+	}
+
+	if acceptHeader != "" {
+		req.Header.Set("Accept", acceptHeader)
 	}
 
 	resp, err := http.DefaultClient.Do(req)
@@ -247,17 +251,17 @@ func (apiInfo *APIInfo) doHTTPRequest(method, url string, body *string) (*http.R
 }
 
 func (apiInfo *APIInfo) httpDelete(url string) (*http.Response, error) {
-	return apiInfo.doHTTPRequest("DELETE", url, nil)
+	return apiInfo.doHTTPRequest("DELETE", url, nil, "")
 }
 
 func (apiInfo *APIInfo) httpGet(url string) (*http.Response, error) {
-	return apiInfo.doHTTPRequest("GET", url, nil)
+	return apiInfo.doHTTPRequest("GET", url, nil, "")
 }
 
 func (apiInfo *APIInfo) httpPatch(url, body string) (*http.Response, error) {
-	return apiInfo.doHTTPRequest("PATCH", url, &body)
+	return apiInfo.doHTTPRequest("PATCH", url, &body, "")
 }
 
 func (apiInfo *APIInfo) httpPost(url, body string) (*http.Response, error) {
-	return apiInfo.doHTTPRequest("POST", url, &body)
+	return apiInfo.doHTTPRequest("POST", url, &body, "")
 }
