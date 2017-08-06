@@ -14,12 +14,7 @@ import (
 func ReadRequest(secret []byte, r *http.Request) (GitHubEventType, []byte, error) {
 	var body []byte
 	var err error
-	var messageMAC []byte
 	var eventType GitHubEventType
-
-	if messageMAC, err = getMAC(r); err != nil {
-		return "", nil, err
-	}
 
 	if r.Body == nil {
 		return "", nil, ErrHTTPRequestBodyNil
@@ -29,28 +24,54 @@ func ReadRequest(secret []byte, r *http.Request) (GitHubEventType, []byte, error
 		return "", nil, err
 	}
 
-	sha1hmac := hmac.New(sha1.New, secret)
-	if ok := checkMAC(sha1hmac, body, messageMAC); !ok {
-		return "", nil, ErrSignatureMismatch
+	if err = ValidateEvent(secret, body, r.Header); err != nil {
+		return "", nil, err
 	}
 
-	if eventType, err = getEventType(r); err != nil {
+	if eventType, err = GetEventType(r.Header); err != nil {
 		return "", nil, err
 	}
 
 	return eventType, body, nil
 }
 
-func getEventType(r *http.Request) (GitHubEventType, error) {
-	events := r.Header["X-Github-Event"]
+// ValidateEvent takes an expected GitHub webhook secret, a body, and an http.Header. If signature validation succeeds
+// nil is returned.
+//
+// This function may be used when it's necessary to inspect the body of an event before validating its signature; for
+// example, if the webhook stores separate secrets per organization but has a single endpoint to receive GitHub events
+// it can extract the organization to retrieve the appropriate secret.
+func ValidateEvent(secret []byte, body []byte, header http.Header) error {
+	var err error
+
+	if body == nil {
+		return ErrHTTPRequestBodyNil
+	}
+
+	var messageMAC []byte
+	if messageMAC, err = getMAC(header); err != nil {
+		return err
+	}
+
+	sha1hmac := hmac.New(sha1.New, secret)
+	if ok := checkMAC(sha1hmac, body, messageMAC); !ok {
+		return ErrSignatureMismatch
+	}
+
+	return nil
+}
+
+// GetEventType returns the GitHubEventType based on the "X-Github-Event" header value from a received webhook request.
+func GetEventType(header http.Header) (GitHubEventType, error) {
+	events := header["X-Github-Event"]
 	if events == nil || len(events) != 1 {
 		return "", ErrGitHubEventNotFound
 	}
 	return GitHubEventType(events[0]), nil
 }
 
-func getSignature(r *http.Request) (string, error) {
-	sigs := r.Header["X-Hub-Signature"]
+func getSignature(header http.Header) (string, error) {
+	sigs := header["X-Hub-Signature"]
 	if sigs == nil || len(sigs) != 1 {
 		return "", ErrSignatureNotFound
 	}
@@ -61,8 +82,8 @@ func getSignature(r *http.Request) (string, error) {
 	return sig[5:], nil
 }
 
-func getMAC(r *http.Request) ([]byte, error) {
-	sig, err := getSignature(r)
+func getMAC(header http.Header) ([]byte, error) {
+	sig, err := getSignature(header)
 	if err != nil {
 		return nil, err
 	}
