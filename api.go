@@ -167,6 +167,43 @@ func GetUser(baseURL, authToken string) (*AuthenticatedUser, error) {
 	return &user, nil
 }
 
+// OrgSummary contains organization summary information.
+type OrgSummary struct {
+	Login            string `json:"login"`
+	ID               int    `json:"id"`
+	URL              string `json:"url"`
+	ReposURL         string `json:"repos_url"`
+	EventsURL        string `json:"events_url"`
+	HooksURL         string `json:"hooks_url"`
+	IssuesURL        string `json:"issues_url"`
+	MembersURL       string `json:"members_url"`
+	PublicMembersURL string `json:"public_members_url"`
+	AvatarURL        string `json:"avatar_url"`
+	Description      string `json:"description"`
+}
+
+// GetOrganizations returns Organization summary information from /organizations.
+//
+// See https://developer.github.com/v3/orgs/#list-all-organizations.
+func GetOrganizations(baseURL, authToken string, since int) ([]OrgSummary, error) {
+	apiInfo := APIInfo{BaseURL: baseURL, OAuth2Token: authToken}
+	url := apiInfo.addBaseURL(fmt.Sprintf("/organizations?since=%d", since))
+	resp, err := apiInfo.httpGet(url)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	var orgs []OrgSummary
+
+	j := json.NewDecoder(resp.Body)
+	if err = j.Decode(&orgs); err != nil {
+		return nil, err
+	}
+
+	return orgs, nil
+}
+
 // Is404 returns true if the error is an HTTP 404.
 func Is404(err error) bool {
 	return IsHTTPError(err, 404)
@@ -174,6 +211,9 @@ func Is404(err error) bool {
 
 // IsHTTPError returns true if the error is an HTTP error with the specified status code.
 func IsHTTPError(err error, statusCode int) bool {
+	if err == nil {
+		return false
+	}
 	switch val := err.(type) {
 	case *ErrHTTPError:
 		if val.StatusCode == statusCode {
