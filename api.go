@@ -167,6 +167,31 @@ func GetUser(baseURL, authToken string) (*AuthenticatedUser, error) {
 	return &user, nil
 }
 
+// GetOAuthScopes returns the current authenticated user's OAuth scopes.
+func GetOAuthScopes(baseURL, authToken string) ([]string, error) {
+	apiInfo := APIInfo{BaseURL: baseURL, OAuth2Token: authToken}
+	url := apiInfo.addBaseURL("/user")
+	resp, err := apiInfo.httpGet(url)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+	if _, err = io.Copy(ioutil.Discard, resp.Body); err != nil {
+		return nil, err
+	}
+
+	scopesHeader := resp.Header.Get("x-oauth-scopes")
+	var scopes []string
+	for _, s := range strings.Split(scopesHeader, ",") {
+		s = strings.TrimSpace(s)
+		if s != "" {
+			scopes = append(scopes, s)
+		}
+	}
+
+	return scopes, nil
+}
+
 // OrgSummary contains organization summary information.
 type OrgSummary struct {
 	Login            string `json:"login"`
