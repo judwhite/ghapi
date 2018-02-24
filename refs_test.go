@@ -8,7 +8,7 @@ import (
 )
 
 const (
-	createRefResponse string = `
+	createRefResponse = `
 	{
 		"ref": "refs/heads/featureA",
 		"url": "http://127.0.0.1:5285/repos/test_owner/test_repository/git/refs/heads/featureA",
@@ -20,10 +20,10 @@ const (
 	  }`
 )
 
-func TestRefsApi_CreateRefs(t *testing.T) {
+func TestRefsAPI_Create(t *testing.T) {
 	ts, api, signal := makeGitHubAPITestServer(func(w http.ResponseWriter, r *http.Request) {
 		fmt.Printf("%s", r.URL.Path)
-		if r.URL != nil && r.URL.Path == "/repos/test_owner/test_repository/git/refs/" {
+		if r.URL != nil && r.URL.Path == "/repos/test_owner/test_repository/git/refs" {
 			b, err := ioutil.ReadAll(r.Body)
 
 			expectNil(t, err, "err")
@@ -39,7 +39,7 @@ func TestRefsApi_CreateRefs(t *testing.T) {
 	})
 	defer ts.Close()
 
-	result, err := api.Refs.CreateRef("refs/heads/featureA", "aa218f56b14c9653891f9e74264a383fa43fefbd")
+	result, err := api.Refs.Create("refs/heads/featureA", "aa218f56b14c9653891f9e74264a383fa43fefbd")
 	waitSignal(t, signal)
 
 	if err != nil {

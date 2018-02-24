@@ -79,7 +79,7 @@ type ContentsAPI struct {
 	RepositoryInfo
 }
 
-// RefsAPI is used to get/set refs in a repository.
+// RefsAPI is used to get, create, update and delete refs in a repository.
 type RefsAPI struct {
 	RepositoryInfo
 }

@@ -2,7 +2,7 @@ package ghapi
 
 import "encoding/json"
 
-//CreateRefResponse is returned by RefsAPI.CreateRef.
+// CreateRefResponse is returned by RefsAPI.Create.
 type CreateRefResponse struct {
 	Ref    string `json:"ref"`
 	URL    string `json:"url"`
@@ -13,9 +13,10 @@ type CreateRefResponse struct {
 	} `json:"object"`
 }
 
-//CreateRef creates a reference in a repository
-func (api *RefsAPI) CreateRef(ref, sha string) (*CreateRefResponse, error) {
-	url := api.getURL("/repos/:owner/:repo/git/refs/")
+// Create creates a reference in a repository from the specified SHA. 'ref' is the name of the fully qualified reference
+// (ie: refs/heads/master). If it doesn't start with 'refs' and have at least two slashes, it will be rejected.
+func (api *RefsAPI) Create(ref, sha string) (*CreateRefResponse, error) {
+	url := api.getURL("/repos/:owner/:repo/git/refs")
 
 	body := struct {
 		Ref string `json:"ref"`
