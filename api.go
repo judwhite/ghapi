@@ -34,6 +34,7 @@ type GitHubAPI struct {
 	Branch       BranchesAPI
 	Repository   RepositoryAPI
 	Contents     ContentsAPI
+	Refs         RefsAPI
 }
 
 // IssueAPI is used to get information about a repository's issues. Note Pull Requests are treated as issues in some
@@ -75,6 +76,11 @@ type RepositoryAPI struct {
 
 // ContentsAPI is used to get information about the contents of a file in a repository.
 type ContentsAPI struct {
+	RepositoryInfo
+}
+
+// RefsAPI is used to get, create, update and delete refs in a repository.
+type RefsAPI struct {
 	RepositoryInfo
 }
 
@@ -143,6 +149,7 @@ func NewGitHubAPI(baseURL, owner, repository, authToken string) GitHubAPI {
 	gitHubAPI.Branch = BranchesAPI{RepositoryInfo: repositoryInfo}
 	gitHubAPI.Repository = RepositoryAPI{RepositoryInfo: repositoryInfo}
 	gitHubAPI.Contents = ContentsAPI{RepositoryInfo: repositoryInfo}
+	gitHubAPI.Refs = RefsAPI{RepositoryInfo: repositoryInfo}
 
 	return gitHubAPI
 }
