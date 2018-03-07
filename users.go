@@ -34,19 +34,20 @@ type User struct {
 // UserAPI.GetUser and UserAPI.GetUserByURL.
 type UserFull struct {
 	User
-	Name        string    `json:"name"`
-	Company     string    `json:"company"`
-	Blog        string    `json:"blog"`
-	Location    string    `json:"location"`
-	Email       string    `json:"email"`
-	Hireable    bool      `json:"hireable"`
-	Bio         string    `json:"bio"`
-	PublicRepos int       `json:"public_repos"`
-	PublicGists int       `json:"public_gists"`
-	Followers   int       `json:"followers"`
-	Following   int       `json:"following"`
-	CreatedAt   time.Time `json:"created_at"`
-	UpdatedAt   time.Time `json:"updated_at"`
+	Name        string     `json:"name"`
+	Company     string     `json:"company"`
+	Blog        string     `json:"blog"`
+	Location    string     `json:"location"`
+	Email       string     `json:"email"`
+	Hireable    bool       `json:"hireable"`
+	Bio         string     `json:"bio"`
+	PublicRepos int        `json:"public_repos"`
+	PublicGists int        `json:"public_gists"`
+	Followers   int        `json:"followers"`
+	Following   int        `json:"following"`
+	CreatedAt   time.Time  `json:"created_at"`
+	UpdatedAt   time.Time  `json:"updated_at"`
+	SuspendedAt *time.Time `json:"suspended_at"`
 }
 
 // UserPublicOrganizationResponse contains information about an organization a user belongs to, which is publicly visible.
