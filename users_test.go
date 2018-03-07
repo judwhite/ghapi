@@ -6,7 +6,7 @@ import (
 	"testing"
 )
 
-const getUserOctocatResponse string = `{
+const getUserOctocatResponse = `{
   "login": "octocat",
   "id": 1,
   "avatar_url": "https://github.com/images/error/octocat_happy.gif",
@@ -39,7 +39,41 @@ const getUserOctocatResponse string = `{
   "updated_at": "2008-01-14T04:33:35Z"
 }`
 
-const getUserOctocatOrganizationsResponse string = `[
+const getUserOctocatSuspendedResponse = `{
+  "login": "octocat",
+  "id": 1,
+  "avatar_url": "https://github.com/images/error/octocat_happy.gif",
+  "gravatar_id": "",
+  "url": "https://api.github.com/users/octocat",
+  "html_url": "https://github.com/octocat",
+  "followers_url": "https://api.github.com/users/octocat/followers",
+  "following_url": "https://api.github.com/users/octocat/following{/other_user}",
+  "gists_url": "https://api.github.com/users/octocat/gists{/gist_id}",
+  "starred_url": "https://api.github.com/users/octocat/starred{/owner}{/repo}",
+  "subscriptions_url": "https://api.github.com/users/octocat/subscriptions",
+  "organizations_url": "https://api.github.com/users/octocat/orgs",
+  "repos_url": "https://api.github.com/users/octocat/repos",
+  "events_url": "https://api.github.com/users/octocat/events{/privacy}",
+  "received_events_url": "https://api.github.com/users/octocat/received_events",
+  "type": "User",
+  "site_admin": false,
+  "name": "monalisa octocat",
+  "company": "GitHub",
+  "blog": "https://github.com/blog",
+  "location": "San Francisco",
+  "email": "octocat@github.com",
+  "hireable": false,
+  "bio": "There once was...",
+  "public_repos": 2,
+  "public_gists": 1,
+  "followers": 20,
+  "following": 0,
+  "created_at": "2008-01-14T04:33:35Z",
+  "updated_at": "2008-01-14T04:33:35Z",
+  "suspended_at": "2018-03-07T03:36:12-06:00"
+}`
+
+const getUserOctocatOrganizationsResponse = `[
   {
     "login": "github",
     "id": 1,
@@ -105,6 +139,35 @@ func TestUserApi_GetUser(t *testing.T) {
 	expect(t, 0, u.Following, "u.Following")
 	expect(t, date("2008-01-14T04:33:35Z"), u.CreatedAt, "u.CreatedAt")
 	expect(t, date("2008-01-14T04:33:35Z"), u.UpdatedAt, "u.UpdatedAt")
+	expectNil(t, u.SuspendedAt, "u.SuspendedAt")
+}
+
+func TestUserApi_GetUserSuspended(t *testing.T) {
+	ts, api, signal := makeGitHubAPITestServer(func(w http.ResponseWriter, r *http.Request) {
+		if r.URL != nil && r.URL.Path == "/users/octocat" {
+			b, err := ioutil.ReadAll(r.Body)
+
+			expectNil(t, err, "err")
+
+			_, err = w.Write([]byte(getUserOctocatSuspendedResponse))
+
+			expectNil(t, err, "err")
+			expect(t, "GET", r.Method, "r.Method")
+			expect(t, "", string(b), "r.Body")
+		} else {
+			w.WriteHeader(404)
+		}
+	})
+	defer ts.Close()
+
+	u, err := api.User.GetUser("octocat")
+	waitSignal(t, signal)
+
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	expect(t, date("2018-03-07T03:36:12-06:00"), u.SuspendedAt, "u.SuspendedAt")
 }
 
 func TestUserApi_GetUser_ReturnsErrOnHttpErr(t *testing.T) {
