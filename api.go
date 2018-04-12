@@ -334,6 +334,10 @@ func (apiInfo *APIInfo) httpPatch(url, body string) (*http.Response, error) {
 	return apiInfo.doHTTPRequest("PATCH", url, &body, "")
 }
 
+func (apiInfo *APIInfo) httpPut(url string, body string) (*http.Response, error) {
+	return apiInfo.doHTTPRequest("PUT", url, &body, "")
+}
+
 func (apiInfo *APIInfo) httpPost(url, body string) (*http.Response, error) {
 	return apiInfo.doHTTPRequest("POST", url, &body, "")
 }
