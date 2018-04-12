@@ -30,6 +30,13 @@ const (
 	Synchronize PullRequestAction = "synchronize"
 )
 
+//MergeRequestResponse contains information about an attempted merge request.
+type MergeRequestResponse struct {
+	SHA     string `json:"sha"`
+	Merged  bool   `json:"merged"`
+	Message string `json"message"`
+}
+
 // PullRequestResponse contains information about a pull request.
 type PullRequestResponse struct {
 	URL            string     `json:"url"`
@@ -570,6 +577,32 @@ func (api *PullRequestsAPI) GetPullRequest(pullRequestNumber int) (*PullRequestR
 	}
 
 	return &pullRequest, nil
+}
+
+// MergePullRequest merges a pull request using the squash method.
+func (api *PullRequestsAPI) MergePullRequest(pullRequestNumber int) (*MergeRequestResponse, error) {
+	url := api.getURL("/repos/:owner/:repo/pulls/" + strconv.Itoa(pullRequestNumber) + "/merge")
+	body := struct {
+		mergeMethod string `json:"merge_method"`
+	}{"squash"}
+	b, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+
+	resp, err := api.httpPut(url, string(b))
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	var mergeRequest MergeRequestResponse
+
+	j := json.NewDecoder(resp.Body)
+	if err = j.Decode(&mergeRequest); err != nil {
+		return nil, err
+	}
+	return &mergeRequest, err
 }
 
 // GetCommits gets all commits for a pull request by PR number.
