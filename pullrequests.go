@@ -30,11 +30,23 @@ const (
 	Synchronize PullRequestAction = "synchronize"
 )
 
-//MergeRequestResponse contains information about an attempted merge request.
+// MergeMethod represents the state of GitHub's "merge_method" (merge, squash, rebase).
+type MergeMethod string
+
+const (
+	// Merge commit method; "merge".
+	Merge MergeMethod = "merge"
+	// Squash commit method; "squash".
+	Squash MergeMethod = "squash"
+	// Rebase commit method; "rebase".
+	Rebase MergeMethod = "rebase"
+)
+
+// MergeRequestResponse contains information about an attempted merge request.
 type MergeRequestResponse struct {
 	SHA     string `json:"sha"`
 	Merged  bool   `json:"merged"`
-	Message string `json"message"`
+	Message string `json:"message"`
 }
 
 // PullRequestResponse contains information about a pull request.
@@ -579,17 +591,16 @@ func (api *PullRequestsAPI) GetPullRequest(pullRequestNumber int) (*PullRequestR
 	return &pullRequest, nil
 }
 
-// MergePullRequest merges a pull request using the squash method.
-func (api *PullRequestsAPI) MergePullRequest(pullRequestNumber int) (*MergeRequestResponse, error) {
+// MergePullRequest merges a pull request using the specified method.
+func (api *PullRequestsAPI) MergePullRequest(pullRequestNumber int, method MergeMethod) (*MergeRequestResponse, error) {
 	url := api.getURL("/repos/:owner/:repo/pulls/" + strconv.Itoa(pullRequestNumber) + "/merge")
 	body := struct {
-		mergeMethod string `json:"merge_method"`
-	}{"squash"}
+		MergeMethod string `json:"merge_method"`
+	}{string(method)}
 	b, err := json.Marshal(body)
 	if err != nil {
 		return nil, err
 	}
-
 	resp, err := api.httpPut(url, string(b))
 	if err != nil {
 		return nil, err
