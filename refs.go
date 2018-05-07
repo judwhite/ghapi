@@ -46,3 +46,23 @@ func (api *RefsAPI) Create(ref, sha string) (*CreateRefResponse, error) {
 
 	return &response, nil
 }
+
+// Get information about a ref. `ref` must be formatted as heads/master, not just master
+// https://developer.github.com/v3/git/refs/#get-a-reference
+func (api *RefsAPI) Get(ref string) (*CreateRefResponse, error) {
+	url := api.getURL("/repos/:owner/:repo/git/refs/")
+
+	resp, err := api.httpGet(url + ref)
+	if err != nil {
+		return nil, err
+	}
+
+	var refInfo CreateRefResponse
+
+	j := json.NewDecoder(resp.Body)
+	if err = j.Decode(&refInfo); err != nil {
+		return nil, err
+	}
+
+	return &refInfo, nil
+}
