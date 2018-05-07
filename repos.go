@@ -688,6 +688,7 @@ func (api *RepositoryAPI) GetLabels() ([]IssueLabel, error) {
 	return allLabels, nil
 }
 
+// GetCompare returns the comparison between two refs
 func (api *RepositoryAPI) GetCompare(base string, head string) (*Compare, error) {
 	url := api.getURL(fmt.Sprintf("/repos/:owner/:repo/compare/%s...%s", base, head))
 	resp, err := api.httpGet(url)
