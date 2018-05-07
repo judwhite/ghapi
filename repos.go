@@ -440,6 +440,34 @@ type Commit struct {
 	} `json:"files"`
 }
 
+// Compare represents detail of comparison between two branches or commits
+type Compare struct {
+	URL             string   `json:"url"`
+	HTMLURL         string   `json:"html_url"`
+	PermalinkURL    string   `json:"permalink_url"`
+	DiffURL         string   `json:"diff_url"`
+	PatchURL        string   `json:"patch_url"`
+	BaseCommit      Commit   `json:"base_commit"`
+	MergeBaseCommit Commit   `json:"merge_base_commit"`
+	Status          string   `json:"status"`
+	AheadBy         int      `json:"ahead_by"`
+	BehindBy        int      `json:"behind_by"`
+	TotalCommits    int      `json:"total_commits"`
+	Commits         []Commit `json:"commits"`
+	Files           []struct {
+		Sha         string `json:"sha"`
+		Filename    string `json:"filename"`
+		Status      string `json:"status"`
+		Additions   int    `json:"additions"`
+		Deletions   int    `json:"deletions"`
+		Changes     int    `json:"changes"`
+		BlobURL     string `json:"blob_url"`
+		RawURL      string `json:"raw_url"`
+		ContentsURL string `json:"contents_url"`
+		Patch       string `json:"patch"`
+	} `json:"files"`
+}
+
 // Get returns the repository information.
 func (api *RepositoryAPI) Get() (*RepositoryResponse, error) {
 	url := api.getURL("/repos/:owner/:repo")
@@ -660,4 +688,25 @@ func (api *RepositoryAPI) GetLabels() ([]IssueLabel, error) {
 	}
 
 	return allLabels, nil
+}
+
+// GetCompare returns the comparison between two refs
+func (api *RepositoryAPI) GetCompare(base string, head string) (*Compare, error) {
+	url := api.getURL(fmt.Sprintf("/repos/:owner/:repo/compare/%s...%s", base, head))
+	resp, err := api.httpGet(url)
+	if err != nil {
+		return nil, err
+	}
+
+	var compare Compare
+
+	j := json.NewDecoder(resp.Body)
+	if err = j.Decode(&compare); err != nil {
+		resp.Body.Close()
+		return nil, err
+	}
+
+	resp.Body.Close()
+
+	return &compare, nil
 }
