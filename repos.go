@@ -444,25 +444,27 @@ type Commit struct {
 type Compare struct {
 	URL             string   `json:"url"`
 	HTMLURL         string   `json:"html_url"`
-	PERMALINKURL    string   `json:"permalink_url"`
-	DIFFURL         string   `json:"diff_url"`
-	PATCHURL        string   `json:"patch_url"`
-	BASECOMMIT      Commit   `json:"base_commit"`
-	MERGEBASECOMMIT Commit   `json:"merge_base_commit"`
-	STATUS          string   `json:"status"`
-	AHEADBY         int      `json:"ahead_by"`
-	BEHINDBY        int      `json:"behind_by"`
-	TOTALCOMMITS    int      `json:"total_commits"`
-	COMMITS         []Commit `json: "commits"`
+	PermalinkURL    string   `json:"permalink_url"`
+	DiffURL         string   `json:"diff_url"`
+	PatchURL        string   `json:"patch_url"`
+	BaseCommit      Commit   `json:"base_commit"`
+	MergeBaseCommit Commit   `json:"merge_base_commit"`
+	Status          string   `json:"status"`
+	AheadBy         int      `json:"ahead_by"`
+	BehindBy        int      `json:"behind_by"`
+	TotalCommits    int      `json:"total_commits"`
+	Commits         []Commit `json:"commits"`
 	Files           []struct {
-		Filename  string `json:"filename"`
-		Additions int    `json:"additions"`
-		Deletions int    `json:"deletions"`
-		Changes   int    `json:"changes"`
-		Status    string `json:"status"`
-		RawURL    string `json:"raw_url"`
-		BlobURL   string `json:"blob_url"`
-		Patch     string `json:"patch"`
+		Sha         string `json:"sha"`
+		Filename    string `json:"filename"`
+		Status      string `json:"status"`
+		Additions   int    `json:"additions"`
+		Deletions   int    `json:"deletions"`
+		Changes     int    `json:"changes"`
+		BlobURL     string `json:"blob_url"`
+		RawURL      string `json:"raw_url"`
+		ContentsURL string `json:"contents_url"`
+		Patch       string `json:"patch"`
 	} `json:"files"`
 }
 
