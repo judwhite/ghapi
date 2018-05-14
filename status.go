@@ -39,14 +39,14 @@ type CommitCombinedStatus struct {
 	SHA        string      `json:"sha"`
 	TotalCount int         `json:"total_count"`
 	Statuses   []struct {
-		CreatedAt   time.Time `json:"created_at"`
-		UpdatedAt   time.Time `json:"updated_at"`
-		State       string    `json:"state"`
-		TargetURL   string    `json:"target_url"`
-		Description string    `json:"description"`
-		ID          int       `json:"id"`
-		URL         string    `json:"url"`
-		Context     string    `json:"context"`
+		CreatedAt   time.Time   `json:"created_at"`
+		UpdatedAt   time.Time   `json:"updated_at"`
+		State       StatusState `json:"state"`
+		TargetURL   string      `json:"target_url"`
+		Description string      `json:"description"`
+		ID          int         `json:"id"`
+		URL         string      `json:"url"`
+		Context     string      `json:"context"`
 	} `json:"statuses"`
 	Repository struct {
 		ID          int    `json:"id"`
