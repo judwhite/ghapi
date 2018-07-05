@@ -541,6 +541,97 @@ type PullRequestCommit struct {
 	} `json:"parents"`
 }
 
+// PullRequestReview contains a Review with a state and optional body comment on a PullRequest
+type PullRequestReview struct {
+	ID     int    `json:"id"`
+	NodeID string `json:"node_id"`
+	User   struct {
+		Login             string `json:"login"`
+		ID                int    `json:"id"`
+		NodeID            string `json:"node_id"`
+		AvatarURL         string `json:"avatar_url"`
+		GravatarID        string `json:"gravatar_id"`
+		URL               string `json:"url"`
+		HTMLURL           string `json:"html_url"`
+		FollowersURL      string `json:"followers_url"`
+		FollowingURL      string `json:"following_url"`
+		GistsURL          string `json:"gists_url"`
+		StarredURL        string `json:"starred_url"`
+		SubscriptionsURL  string `json:"subscriptions_url"`
+		OrganizationsURL  string `json:"organizations_url"`
+		ReposURL          string `json:"repos_url"`
+		EventsURL         string `json:"events_url"`
+		ReceivedEventsURL string `json:"received_events_url"`
+		Type              string `json:"type"`
+		SiteAdmin         bool   `json:"site_admin"`
+	} `json:"user"`
+	Body           string `json:"body"`
+	CommitID       string `json:"commit_id"`
+	State          string `json:"state"`
+	HTMLURL        string `json:"html_url"`
+	PullRequestURL string `json:"pull_request_url"`
+	Links          struct {
+		HTML struct {
+			Href string `json:"href"`
+		} `json:"html"`
+		PullRequest struct {
+			Href string `json:"href"`
+		} `json:"pull_request"`
+	} `json:"_links"`
+}
+
+// PullRequestReviewComments contains the comments on a unified diff in a Pull Request
+type PullRequestReviewComments struct {
+	URL                 string `json:"url"`
+	ID                  int    `json:"id"`
+	NodeID              string `json:"node_id"`
+	PullRequestReviewID int    `json:"pull_request_review_id"`
+	DiffHunk            string `json:"diff_hunk"`
+	Path                string `json:"path"`
+	Position            int    `json:"position"`
+	OriginalPosition    int    `json:"original_position"`
+	CommitID            string `json:"commit_id"`
+	OriginalCommitID    string `json:"original_commit_id"`
+	InReplyToID         int    `json:"in_reply_to_id"`
+	User                struct {
+		Login             string `json:"login"`
+		ID                int    `json:"id"`
+		NodeID            string `json:"node_id"`
+		AvatarURL         string `json:"avatar_url"`
+		GravatarID        string `json:"gravatar_id"`
+		URL               string `json:"url"`
+		HTMLURL           string `json:"html_url"`
+		FollowersURL      string `json:"followers_url"`
+		FollowingURL      string `json:"following_url"`
+		GistsURL          string `json:"gists_url"`
+		StarredURL        string `json:"starred_url"`
+		SubscriptionsURL  string `json:"subscriptions_url"`
+		OrganizationsURL  string `json:"organizations_url"`
+		ReposURL          string `json:"repos_url"`
+		EventsURL         string `json:"events_url"`
+		ReceivedEventsURL string `json:"received_events_url"`
+		Type              string `json:"type"`
+		SiteAdmin         bool   `json:"site_admin"`
+	} `json:"user"`
+	Body           string    `json:"body"`
+	CreatedAt      time.Time `json:"created_at"`
+	UpdatedAt      time.Time `json:"updated_at"`
+	HTMLURL        string    `json:"html_url"`
+	PullRequestURL string    `json:"pull_request_url"`
+	Links          struct {
+		Self struct {
+			Href string `json:"href"`
+		} `json:"self"`
+		HTML struct {
+			Href string `json:"href"`
+		} `json:"html"`
+		PullRequest struct {
+			Href string `json:"href"`
+		} `json:"pull_request"`
+	} `json:"_links"`
+}
+
+
 // ListPullRequests lists pull requests for the repository.
 // state is either "open", "closed", or "all".
 func (api *PullRequestsAPI) ListPullRequests(state string) ([]PullRequestResponse, error) {
@@ -683,4 +774,60 @@ func (api *PullRequestsAPI) Create(head, base, title, body string, maintainerCan
 	}
 
 	return &pr, nil
+}
+
+// ListPullRequestReviews gets all the PullRequestReviews for a Pull Request
+func (api *PullRequestsAPI) ListPullRequestReviews(pullRequestNumber int) ([]PullRequestReview, error) {
+	var allPRReviews []PullRequestReview
+	for page := 1; ; page++ {
+		url := api.getURL(fmt.Sprintf("/repos/:owner/:repo/pulls/%d/reviews?page=%d", pullRequestNumber, page))
+
+		resp, err := api.httpGet(url)
+		//resp.Header["Link"] // TODO (judwhite), get next page until last
+		//<url>; rel="last", <url>; rel="first", <url>; rel="prev", <url>; rel="next"
+		if err != nil {
+			return nil, err
+		}
+
+		pullRequestReviews := []PullRequestReview{}
+		if err = json.NewDecoder(resp.Body).Decode(&pullRequestReviews); err != nil {
+			resp.Body.Close()
+			return nil, err
+		}
+		resp.Body.Close()
+
+		allPRReviews = append(allPRReviews, pullRequestReviews...)
+		if len(pullRequestReviews) == 0 || resp.Header.Get("Link") == "" {
+			break
+		}
+	}
+	return allPRReviews, nil
+}
+
+// ListPullRequestReviewComments gets all PullRequestReviewComments for a Pull Request
+func (api *PullRequestsAPI) ListPullRequestReviewComments(pullRequestNumber int) ([]PullRequestReviewComments, error) {
+	var allPRReviewComments []PullRequestReviewComments
+	for page := 1; ; page++ {
+		url := api.getURL(fmt.Sprintf("/repos/:owner/:repo/pulls/%d/comments?page=%d", pullRequestNumber, page))
+
+		resp, err := api.httpGet(url)
+		//resp.Header["Link"] // TODO (judwhite), get next page until last
+		//<url>; rel="last", <url>; rel="first", <url>; rel="prev", <url>; rel="next"
+		if err != nil {
+			return nil, err
+		}
+
+		pullRequestReviewComments := []PullRequestReviewComments{}
+		if err = json.NewDecoder(resp.Body).Decode(&pullRequestReviewComments); err != nil {
+			resp.Body.Close()
+			return nil, err
+		}
+		resp.Body.Close()
+
+		allPRReviewComments = append(allPRReviewComments, pullRequestReviewComments...)
+		if len(pullRequestReviewComments) == 0 || resp.Header.Get("Link") == "" {
+			break
+		}
+	}
+	return allPRReviewComments, nil
 }
